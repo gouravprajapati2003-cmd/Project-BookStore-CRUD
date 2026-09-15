@@ -39,7 +39,7 @@ const CreateDiscount = () => {
       method: 'POST',
       data: data
     })
-      .then(res => {
+      .then(() => {
         alert('Discount Has Been Added SuccessFully...')
         navigate('/discounts')
       })

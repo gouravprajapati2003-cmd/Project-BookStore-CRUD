@@ -15,5 +15,8 @@ router.get('/discounts', (req, res) => {
 router.get('/discount/for/edit/:id', (req, res) => {
     DiscountController.getDiscountForEdit(req, res);
 });
+router.put('/edit/discount/:id', (req, res) => {
+    DiscountController.editDiscount(req, res);
+});
 
 module.exports = router;

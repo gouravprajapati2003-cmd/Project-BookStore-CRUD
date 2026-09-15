@@ -38,12 +38,25 @@ const getDiscounts = async (req, res) => {
 const getDiscountForEdit = async (req, res) => {
   try {
    let id = req.params.id;
-   let discount = await Discount.findOne({_id: id}).populate('book');
+   let discount = await Discount.findOne({_id: id});
+   let books = await Book.find({});
    console.log(discount);
-   res.status(200).send({data: discount});
+   res.status(200).send({data: discount, books: books});
   } catch (err) {
     console.log(err);
     res.status(400).send({message: 'Something went Wrong'})
+  }
+}
+
+const editDiscount = async (req, res) => {
+  try {
+    let id = req.params.id;
+    await Discount.updateOne({_id: id}, req.body)
+    console.log("Data Has Been Updated Successfully")
+    res.status(200).send({message: 'Data Inserted Successfully'})
+  } catch (err) {
+    console.log(err);
+    res.status(400).send({ message: 'Data Inserted Failed...'});
   }
 }
 
@@ -52,4 +65,5 @@ module.exports = {
   addDiscount,
   getDiscounts,
   getDiscountForEdit,
+  editDiscount,
 }
