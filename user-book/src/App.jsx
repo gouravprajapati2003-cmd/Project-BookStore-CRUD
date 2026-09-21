@@ -1,4 +1,4 @@
-
+import 'bootstrap/dist/css/bootstrap.min.css'
 function App() {
   return (
     <h1>We Are Going to design Frontend</h1>

@@ -18,12 +18,13 @@ const addBook = async (req, res) => {
     res.status(400).send({ message: 'Something Went Wrong' })
   }
 }
+
 const getBooks = async (req, res) => {
   try {
     let totalBooks = await Book.countDocuments({})
     // console.log('Total Books = ',totalBooks);
     let books = await Book.find({
-      bookTitle: new RegExp(req.query.searchBook, 'i')
+      bookTittle: new RegExp(req.query.searchBook || '', 'i')
     })
       .skip((req.query.pageNo - 1) * req.query.booksPerPage)
       .limit(req.query.booksPerPage)
@@ -33,6 +34,7 @@ const getBooks = async (req, res) => {
     res.status(400).send({ message: error })
   }
 }
+
 const deleteBook = async (req, res) => {
   try {
     id = req.params.id
@@ -70,10 +72,34 @@ const editBook = async (req, res) => {
   }
 }
 
+const getBookById = async (req, res) => {
+  try {
+    const book = await Book.findById(req.params.id)
+
+    if (!book) {
+      return res.status(404).send({
+        message: 'Book not found'
+      })
+    }
+
+    res.status(200).send({
+      data: book
+    })
+  } catch (error) {
+    console.log('GET BOOK BY ID ERROR:', error)
+
+    res.status(400).send({
+      message: error.message
+    })
+  }
+}
+
+
 module.exports = {
   addBook,
   getBooks,
   deleteBook,
   getBookForEdit,
-  editBook
+  editBook,
+  getBookById,
 }

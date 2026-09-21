@@ -3,7 +3,7 @@ const Discount = require('../models/Discount')
 
 const getBooks = async (req, res) => {
   try {
-    let books = await Book.find({}, { _id: 1, bookTitle: 1 })
+    let books = await Book.find({}, { _id: 1, bookTittle: 1 })
     // console.log(books, 'books')
     res.status(200).send({ data: books })
   } catch (error) {
@@ -40,7 +40,7 @@ const getDiscountForEdit = async (req, res) => {
    let id = req.params.id;
    let discount = await Discount.findOne({_id: id});
    let books = await Book.find({});
-   console.log(discount);
+   //console.log(discount);
    res.status(200).send({data: discount, books: books});
   } catch (err) {
     console.log(err);
@@ -52,7 +52,7 @@ const editDiscount = async (req, res) => {
   try {
     let id = req.params.id;
     await Discount.updateOne({_id: id}, req.body)
-    console.log("Data Has Been Updated Successfully")
+   // console.log("Data Has Been Updated Successfully")
     res.status(200).send({message: 'Data Inserted Successfully'})
   } catch (err) {
     console.log(err);
