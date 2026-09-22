@@ -33,7 +33,6 @@ function BookList () {
   }
 
   function handleDelete (id) {
-    alert(id)
     axios({
       url: apiUrl + '/delete/book/' + id,
       method: 'delete'
@@ -47,7 +46,6 @@ function BookList () {
       })
   }
   function handleUpdate (id) {
-    alert(id)
     navigate('/edit/book/' + id)
   }
   const handleView = id => {

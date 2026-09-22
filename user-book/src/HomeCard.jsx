@@ -25,11 +25,11 @@ function HomeCard() {
                         <Card style={{ width: '18rem' }}>
                             <Card.Img src={book.bookImage} height='200px' width='50px'></Card.Img>
                             <Card.Body>
-                                <Card.Title>{book.bookTitle}</Card.Title>
+                                <Card.Title>{book.bookTittle}</Card.Title>
                                 <Card.Text>
                                     {book.authorName}<br></br>
-                                    &#x20b9;{book.price}<br></br>
-                                    {book.publication}
+                                    &#x20b9;{book.originalPrice}<br></br>
+                                    {book.publicationYear}
                                 </Card.Text>
                             </Card.Body>
                         </Card>

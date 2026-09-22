@@ -432,7 +432,7 @@ function BookPageForEdit () {
 
               <div className='text-center mt-3'>
                 <Button variant='danger' type='submit' className='me-2'>
-                  Update Book
+                  Edit Book
                 </Button>
 
                 <Button
