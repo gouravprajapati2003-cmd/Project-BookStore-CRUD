@@ -2,12 +2,21 @@ import Container from 'react-bootstrap/Container'
 import Nav from 'react-bootstrap/Nav'
 import Navbar from 'react-bootstrap/Navbar'
 import { Button } from 'react-bootstrap'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Login from './Login'
 import logo from './assets/logo.png'
 
 function NavBar () {
   let [showLoginModal, setShowLoginModal] = useState(false)
+  let [isLoggedIn, setIsLoggedIn] = useState(false)
+  let [userName, setUserName] = useState('')
+  useEffect(() => {
+      let flag = localStorage.getItem('isLoggedIn')
+      if(flag) {
+        setIsLoggedIn(true)
+        setUserName(localStorage.getItem('name'))
+      }
+  }, [])
   function goForLogin () {
     setShowLoginModal(true)
   }
@@ -31,9 +40,11 @@ function NavBar () {
             <Nav.Link href='#books'>Books</Nav.Link>
             <Nav.Link href='#contact us'>Contact Us</Nav.Link>
           </Nav>
-          <Button variant='success' className='ms-1' onClick={goForLogin}>
+          {isLoggedIn && <span className='text-white'>Welcome {userName}</span>}
+          {isLoggedIn && <Button variant='danger' className='ms-1'>Logout</Button>}
+          {!isLoggedIn && <Button variant='success' className='ms-1' onClick={goForLogin}>
             Login
-          </Button>
+          </Button>}
         </Container>
       </Navbar>
       {showLoginModal && <Login></Login>}
