@@ -163,7 +163,7 @@ function BookDetail () {
       <div className='d-flex align-items-center justify-content-end gap-3 mt-3'>
         {/* Pincode Section */}
         <div className='d-flex align-items-center gap-2'>
-          <h6 className='mb-0'>Check Delivery:</h6>
+          <h5 className='mb-1'>Check Delivery:</h5>
 
           <Form.Control
             type='text'
@@ -181,7 +181,7 @@ function BookDetail () {
         </Button>
 
         {/* Buy Now */}
-        <Button style={{ width: '180px' }} size='lg' variant='primary'>
+        <Button style={{ width: '180px' }} size='lg' variant='success'>
           Buy Now
         </Button>
       </div>

@@ -131,7 +131,7 @@ function HomeCard () {
                     &#x20B9;{book.originalPrice}
                   </span>
 
-                  <Badge
+                  {/* <Badge
                     bg='success'
                     className='ms-2'
                     style={{
@@ -141,7 +141,7 @@ function HomeCard () {
                     }}
                   >
                     Available
-                  </Badge>
+                  </Badge> */}
                 </div>
 
                 {/* View Details Button */}
