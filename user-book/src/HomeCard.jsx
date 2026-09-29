@@ -1,10 +1,12 @@
 import axios from 'axios'
 import { useState, useEffect } from 'react'
 import { Container, Row, Col, Card, Button, Badge } from 'react-bootstrap'
-
+import { useNavigate } from 'react-router-dom'
+import ImageSlider from './ImageSlider.jsx'
 const apiUrl = import.meta.env.VITE_API_URL
 
 function HomeCard () {
+  let navigate = useNavigate();
   let [books, setBooks] = useState([])
 
   useEffect(() => {
@@ -19,6 +21,9 @@ function HomeCard () {
         console.log(err)
       })
   }, [])
+  function goToDetailPage(id) {
+     navigate('/user/book/detail/' + id);
+  }
 
   return (
     <Container
@@ -29,6 +34,8 @@ function HomeCard () {
     minHeight: '100vh'
   }}
 >
+  <ImageSlider></ImageSlider>
+
       {/* Heading */}
       <div className='text-center mb-2'>
         <div className='d-flex align-items-center justify-content-center gap-2 mb-2'>
@@ -39,7 +46,7 @@ function HomeCard () {
       <Row className='g-4'>
         {books.map((book, index) => (
           <Col key={index} xs={12} sm={6} md={4} lg={3}>
-            <Card
+            <Card onClick={() => goToDetailPage(book._id)}
   className='h-100 border-0'
   style={{
     borderRadius: '12px',
@@ -138,7 +145,8 @@ function HomeCard () {
                 </div>
 
                 {/* View Details Button */}
-                <Button
+                <Button 
+                  onClick={() => goToDetailPage(book._id)}
                   variant='dark'
                   className='w-100 mt-auto'
                   style={{

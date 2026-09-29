@@ -95,7 +95,7 @@ function BookList () {
             <thead>
               <tr>
                 <th>BookImage</th>
-                <th>Book Tittle</th>
+                <th>Book Title</th>
                 <th>Author Name</th>
                 <th>Price</th>
                 <th>ISBN NO</th>
