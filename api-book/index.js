@@ -7,6 +7,7 @@ const User = require('./routes/UserRoutes');
 const home = require('./routes/User/home')
 const discount = require('./routes/DiscountRoutes')
 const frontUser = require('./routes/User/user')
+const pincode = require('./routes/PincodeRoutes');
 const app = express();
 app.use(cors());
 app.use(book);
@@ -14,6 +15,7 @@ app.use(discount);
 app.use(home);
 app.use(frontUser);
 app.use(User);
+app.use(pincode);
 
 connect();
 createAdmin();

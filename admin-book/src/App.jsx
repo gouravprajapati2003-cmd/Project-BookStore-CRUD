@@ -10,6 +10,9 @@ import DiscountList from './pages/Discount/DiscountList'
 import DiscountForEdit from './pages/Discount/DiscountForEdit'
 import BookDetail from './pages/books/BookDetail'
 import UserList from './pages/Users/UserList'
+import PincodeList from './pages/PincodeAvailability/PincodeList'
+import AddPincode from './pages/PincodeAvailability/AddPincode'
+import EditPincode from './pages/PincodeAvailability/EditPincode'
 function App() {
   return (
     <BrowserRouter>
@@ -46,6 +49,9 @@ function App() {
             ></Route>
             <Route path="/book/:id" element={<BookDetail></BookDetail>}></Route>
             <Route path='/users' element={<UserList></UserList>}></Route>
+            <Route path='/pincodes' element={<PincodeList></PincodeList>}></Route>
+            <Route path='/add/pincode' element={<AddPincode></AddPincode>}></Route>
+            <Route path='/edit/pincode/:id' element={<EditPincode></EditPincode>}></Route>
           </Routes>
         </main>
       </div>

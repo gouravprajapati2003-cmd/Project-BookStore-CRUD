@@ -64,7 +64,7 @@ function Sidebar() {
 
             <ListGroup.Item
               as={NavLink}
-              to="/availabilty"
+              to="/pincodes"
               className="d-flex align-items-center gap-2">
               <i className='bi bi-book'></i>
               <span className="d-none d-md-inline">Manage Availabilty</span>

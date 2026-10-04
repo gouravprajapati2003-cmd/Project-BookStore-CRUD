@@ -36,7 +36,7 @@ function NavBar () {
             G.K.P BookStore
           </Navbar.Brand>
           <Nav className='me-auto'>
-            <Nav.Link href='#home'>Home</Nav.Link>
+            <Nav.Link href='/'>Home</Nav.Link>
             <Nav.Link href='#books'>Books</Nav.Link>
             <Nav.Link href='#contact us'>Contact Us</Nav.Link>
           </Nav>
