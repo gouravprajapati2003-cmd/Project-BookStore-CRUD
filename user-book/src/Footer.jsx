@@ -54,6 +54,16 @@ function Footer() {
                   Home
                 </a>
               </li>
+              <li className="mb-2">
+                <a href="/cart" className="text-secondary text-decoration-none">
+                  Cart
+                </a>
+              </li>
+              <li className="mb-2">
+                <a href="/checkout" className="text-secondary text-decoration-none">
+                  CheckOut
+                </a>
+              </li>
             </ul>
           </Col>
 
@@ -81,7 +91,7 @@ function Footer() {
 
             <p className="text-secondary mb-2">
               <i className="bi bi-telephone-fill me-2"></i>
-              +91 8171xxxxxx
+              +91 8171xxxx32
             </p>
 
             <p className="text-secondary mb-2">
