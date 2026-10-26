@@ -154,6 +154,13 @@ function NavBar () {
                   </Badge>
                 )}
               </Nav.Link>
+              <Nav.Link
+                href='/myorders'
+                style={{ color: 'white' }}
+                className='text-white fw-semibold mx-1'
+              >
+                My Orders
+              </Nav.Link>
             </Nav>
 
             {/* Login / User Section */}

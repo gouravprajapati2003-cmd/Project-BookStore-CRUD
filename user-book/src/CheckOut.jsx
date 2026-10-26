@@ -39,6 +39,7 @@ function CheckOut () {
       state: state,
       country: country,
       pinCode: pinCode,
+      products: products,
       amount: totalCost
     }
     const res = await loadScript('https://checkout.razorpay.com/v1/checkout.js')
@@ -211,7 +212,7 @@ function CheckOut () {
             </thead>
             <tbody>
               {products.map(product => (
-                <tr>
+                <tr key={product._id}>
                   <td>
                     <img
                       src={product.bookImage}

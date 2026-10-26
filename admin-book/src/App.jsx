@@ -13,6 +13,8 @@ import UserList from './pages/Users/UserList'
 import PincodeList from './pages/PincodeAvailability/PincodeList'
 import AddPincode from './pages/PincodeAvailability/AddPincode'
 import EditPincode from './pages/PincodeAvailability/EditPincode'
+import TransactionList from './pages/Transaction/TransactionList'
+
 function App () {
   return (
     <BrowserRouter>
@@ -61,6 +63,7 @@ function App () {
               path='/edit/pincode/:id'
               element={<EditPincode></EditPincode>}
             ></Route>
+            <Route path='/transactions' element={<TransactionList></TransactionList>}></Route>
           </Routes>
         </main>
       </div>

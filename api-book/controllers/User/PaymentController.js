@@ -37,6 +37,9 @@ const verifyPayment = async (req, res) => {
       .digest('hex')
    // console.log(expectedSign, 'expectedSign')
     if (razorpay_signature === expectedSign) {
+      let transaction = await Transaction.findOne({ transactionId: razorpay_order_id })
+      transaction.status = 'Completed';
+      await transaction.save();
       return res.status(200).json({ message: 'Payment verified successfully' })
     } else {
       return res

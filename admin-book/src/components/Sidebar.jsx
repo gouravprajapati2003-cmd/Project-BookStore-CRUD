@@ -60,7 +60,7 @@ function Sidebar () {
               to='/users'
               className='d-flex align-items-center gap-2'
             >
-              <i className='bi bi-book'></i>
+              <i className='bi bi-people'></i>
               <span className='d-none d-md-inline'>Manage User</span>
             </ListGroup.Item>
 
@@ -69,7 +69,7 @@ function Sidebar () {
               to='/discounts'
               className='d-flex align-items-center gap-2'
             >
-              <i className='bi bi-book'></i>
+              <i className='bi bi-percent'></i>
               <span className='d-none d-md-inline'>Manage Discount</span>
             </ListGroup.Item>
 
@@ -78,8 +78,17 @@ function Sidebar () {
               to='/pincodes'
               className='d-flex align-items-center gap-2'
             >
-              <i className='bi bi-book'></i>
+              <i className='bi bi-clock-history'></i>
               <span className='d-none d-md-inline'>Manage Availabilty</span>
+            </ListGroup.Item>
+
+            <ListGroup.Item
+              as={NavLink}
+              to='/transactions'
+              className='d-flex align-items-center gap-2'
+            >
+              <i className='bi bi-arrow-left-right'></i>
+              <span className='d-none d-md-inline'>Manage Transaction</span>
             </ListGroup.Item>
           </ListGroup>
         </div>
