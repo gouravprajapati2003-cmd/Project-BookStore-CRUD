@@ -4,10 +4,10 @@ const crypto = require('crypto')
 
 const makePayment = async (req, res) => {
   try {
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET
-})
+    const razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET
+    })
     //console.log(req.body)
     let transaction = new Transaction(req.body)
     const options = {
@@ -16,7 +16,7 @@ const razorpay = new Razorpay({
       receipt: req.body.firstName
     }
     const order = await razorpay.orders.create(options)
-   // console.log(order)
+    // console.log(order)
     transaction.transactionId = order.id
     res.status(200).json(order)
     await transaction.save()
@@ -35,12 +35,17 @@ const verifyPayment = async (req, res) => {
       .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET) // '' me secret key likho
       .update(sign.toString())
       .digest('hex')
-   // console.log(expectedSign, 'expectedSign')
+    // console.log(expectedSign, 'expectedSign')
     if (razorpay_signature === expectedSign) {
-      let transaction = await Transaction.findOne({ transactionId: razorpay_order_id })
-      transaction.status = 'Completed';
-      await transaction.save();
-      return res.status(200).json({ message: 'Payment verified successfully' })
+      let transaction = await Transaction.findOne({
+        transactionId: razorpay_order_id
+      })
+      transaction.status = 'Completed'
+      await transaction.save()
+      return res.status(200).json({
+        message: 'Payment verified successfully',
+        data: razorpay_order_id
+      })
     } else {
       return res
         .status(400)
@@ -51,7 +56,21 @@ const verifyPayment = async (req, res) => {
   }
 }
 
+const getMyOrders = async (req, res) => {
+  try {
+    let { email } = req.body;
+    console.log(email)
+    let myOrders = await Transaction.find({ email: email })
+    console.log(myOrders)
+    res.status(200).send({ data: myOrders })
+  } catch (err) {
+    console.log(err)
+    res.status(500).send({ message: 'Something Went Wrong' });
+  }
+}
+
 module.exports = {
   makePayment,
-  verifyPayment
+  verifyPayment,
+  getMyOrders
 }

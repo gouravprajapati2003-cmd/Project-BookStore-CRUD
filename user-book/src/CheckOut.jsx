@@ -1,11 +1,15 @@
 import { Container, Row, Col, Form, Button } from 'react-bootstrap'
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { deleteCart } from './feactures/cart/cartSlice'
 const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID
 const apiUrl = import.meta.env.VITE_API_URL
 
 function CheckOut () {
   const { products, totalCost } = useSelector(state => state.cart)
+  const dispatch = useDispatch()
+  let navigate = useNavigate()
   let [firstName, setFirstName] = useState('')
   let [lastName, setLastName] = useState('')
   let [email, setEmail] = useState('')
@@ -16,7 +20,10 @@ function CheckOut () {
   let [state, setState] = useState('')
   let [country, setCountry] = useState('')
   let [pinCode, setPinCode] = useState('')
- // let [amount, setAmount] = useState(0)
+  // let [amount, setAmount] = useState(0)
+  function deleteCartOnPaymentSuccess () {
+    dispatch(deleteCart())
+  }
   const loadScript = src => {
     return new Promise(resolve => {
       const script = document.createElement('script')
@@ -62,19 +69,19 @@ function CheckOut () {
       order_id: orderData.id,
       handler: async function (response) {
         // स्टेप 4: पेमेंट सफल होने पर बैकएंड पर वेरिफिकेशन भेजें
-        const verifyResponse = await fetch(
-          apiUrl + '/verify-payment',
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(response)
-          }
-        )
+        const verifyResponse = await fetch(apiUrl + '/verify-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(response)
+        })
         const verifyData = await verifyResponse.json()
         if (verifyResponse.ok) {
           alert('Payment has been done successfully')
+          {deleteCartOnPaymentSuccess()}
+          navigate('/payment/success', { state: verifyData.data })
         } else {
           alert('Verification Failed: ' + verifyData.message)
+          navigate('/payment/fail')
         }
       },
       prefill: {

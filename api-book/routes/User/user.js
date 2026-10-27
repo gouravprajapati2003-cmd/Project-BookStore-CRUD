@@ -8,5 +8,8 @@ router.post('/create/user', (req, res) => {
 router.post('/user/login', (req, res) => {
         UserController.doUserLogin(req, res);
 })
+router.put('/update/status/:id', (req, res) => {
+        UserController.updateUserStatus(req, res)
+})
 
 module.exports = router;

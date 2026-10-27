@@ -10,7 +10,7 @@ const userSchema = new Schema({
     profilePhoto: { type: String, },
     lastLogin: { type: Date },
     userType: { type: String, default: 'user', enum: ['user', 'admin'] },
-    status: { type: String, default: 'active', enum: ['active', 'inactive'] },
+    status: { type: String, default: 'Active', enum: ['Active', 'Inactive'] },
     
 }, {timeStamps: true})
 module.exports = mongoose.model('User', userSchema);

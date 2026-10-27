@@ -33,6 +33,10 @@ const cartSlice = createSlice({
       )
       state.message = 'Item Remove From Cart'
     },
+    deleteCart: (state) => {
+          state.products.length = 0
+          state.totalCost = 0
+    },
 
     // Clear Cart Message
     clearCartMessage: state => {
@@ -46,6 +50,7 @@ export const {
   addProduct,
   deleteProduct,
   clearCartMessage,
+  deleteCart,
 } = cartSlice.actions
 
 export default cartSlice.reducer

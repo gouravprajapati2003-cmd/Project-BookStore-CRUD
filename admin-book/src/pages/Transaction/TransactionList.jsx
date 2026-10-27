@@ -23,7 +23,7 @@ function TransactionList () {
       <Row>
         <Col>
           <h3 className='mt-2 text-center text-danger'>Transactions List</h3>
-          <Table className='mt-3'>
+          <Table className='mt-3' bordered>
             <thead>
               <tr>
                 <td>Transaction Id</td>

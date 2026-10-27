@@ -51,7 +51,50 @@ const doUserLogin = async (req, res) => {
   }
 }
 
+const updateUserStatus = async (req, res) => {
+  try {
+    const { id } = req.params
+    const { status } = req.body
+
+    // Validate status
+    if (!['Active', 'Inactive'].includes(status)) {
+      return res.status(400).send({
+        success: false,
+        message: 'Invalid status'
+      })
+    }
+
+    // Update user status
+    const user = await User.findByIdAndUpdate(
+      id,
+      { status: status },
+      { new: true, runValidators: true }
+    )
+
+    if (!user) {
+      return res.status(404).send({
+        success: false,
+        message: 'User not found'
+      })
+    }
+
+    res.status(200).send({
+      success: true,
+      message: 'User status updated successfully',
+      data: user
+    })
+  } catch (err) {
+    console.log(err)
+    res.status(500).send({
+      success: false,
+      message: 'Something went wrong'
+    })
+  }
+}
+
+
 module.exports = {
   addUser,
-  doUserLogin
+  doUserLogin,
+  updateUserStatus,
 }

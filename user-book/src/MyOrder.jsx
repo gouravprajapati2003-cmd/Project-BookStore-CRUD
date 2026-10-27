@@ -8,9 +8,13 @@ function MyOrder() {
         let isLoggedIn = localStorage.getItem('isLoggedIn');
         if(isLoggedIn) {
             let email = localStorage.getItem('email')
+           let data = {
+                email: email
+            }
             axios({
                 url: apiUrl + '/my/orders',
-                method: 'get'
+                method: 'post',
+                data:data
             }).then((res) => {
                 setMyOrders(res.data.data)
             }).catch((err) => {

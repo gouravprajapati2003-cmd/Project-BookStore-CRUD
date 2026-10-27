@@ -105,6 +105,10 @@ function BookDetail () {
       setPincode('')
     }
   }
+  function buyNow() {
+    dispatch(addProduct(book))
+    navigate('/checkout')
+  }
 
   return (
     <Container className='py-4'>
@@ -341,7 +345,7 @@ function BookDetail () {
             style={{ minWidth: '180px' }}
             size='lg'
             variant='success'
-            onClick={() => navigate('/cart')}
+            onClick={buyNow}
           >
             Buy Now
           </Button>
