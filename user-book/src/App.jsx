@@ -14,26 +14,37 @@ import PaymentFailure from './PaymentFailure.jsx'
 
 function App () {
   return (
-    <>
-      <Provider store={store}>
-        <BrowserRouter>
-          <NavBar />
+    <Provider store={store}>
+      <BrowserRouter>
+        <NavBar />
+        <main
+          style={{
+            backgroundColor: '#F5F7FA',
+            minHeight: '80vh',
+            paddingTop: '0px',
+            paddingBottom: '30px'
+          }}
+        >
           <Routes>
-            <Route path='/' element={<HomeCard></HomeCard>}></Route>
-            <Route
-              path='/user/book/detail/:id'
-              element={<BookDetail></BookDetail>}
-            ></Route>
-            <Route path='/cart' element={<Cart />}></Route>
-            <Route path='/checkout' element={<CheckOut></CheckOut>}></Route>
-            <Route path='/myorders' element={<MyOrder></MyOrder>}></Route>
-            <Route path='/payment/success' element={<PaymentSuccess></PaymentSuccess>}></Route>
-            <Route path='/payment/fail' element={<PaymentFailure></PaymentFailure>}></Route>
+            <Route path='/' element={<HomeCard />} />
+
+            <Route path='/user/book/detail/:id' element={<BookDetail />} />
+
+            <Route path='/cart' element={<Cart />} />
+
+            <Route path='/checkout' element={<CheckOut />} />
+
+            <Route path='/myorders' element={<MyOrder />} />
+
+            <Route path='/payment/success' element={<PaymentSuccess />} />
+
+            <Route path='/payment/fail' element={<PaymentFailure />} />
           </Routes>
-          <Footer />
-        </BrowserRouter>
-      </Provider>
-    </>
+        </main>
+
+        <Footer />
+      </BrowserRouter>
+    </Provider>
   )
 }
 

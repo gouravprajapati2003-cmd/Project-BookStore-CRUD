@@ -1,147 +1,159 @@
-import { Container, Row, Col, } from "react-bootstrap";
+import { Container, Row, Col } from "react-bootstrap";
+import { Link } from "react-router-dom";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 function Footer() {
+  const linkStyle = {
+    color: "#F0FDFA",
+    textDecoration: "none",
+    display: "inline-block",
+    marginBottom: "10px"
+  };
+
   return (
-    <footer className="bg-dark text-light mt-5">
-
-      {/* Main Footer */}
+    <footer
+      style={{
+        backgroundColor: "#0F766E",
+        color: "#F0FDFA",
+        marginTop: "40px"
+      }}
+    >
       <Container className="py-5">
-        <Row>
+        <Row className="g-4">
 
-          {/* Brand */}
-          <Col md={4} className="mb-4">
-            <h3 className="fw-bold">
-              <i className="bi bi-book-half me-2"></i>
-              G.K.P. BookStore
-            </h3>
+          {/* Store Information */}
+          <Col lg={4} md={6}>
+            <h4 className="fw-bold mb-3 text-white">
+              <i
+                className="bi bi-book-half me-2"
+                style={{ color: "#99F6E4" }}
+              ></i>
+              <span style={{ color: "#99F6E4" }}>G.K.P</span>
+              {" "}BookStore
+            </h4>
 
-            <p className="text-secondary mt-3">
-              Discover your next favorite book from our collection of
-              fiction, education, technology, business and many more.
+            <p style={{ lineHeight: "1.8" }}>
+              Discover your next favorite book with us.
+              Explore a world of knowledge, imagination
+              and learning at G.K.P BookStore.
             </p>
 
-            <div className="d-flex gap-4 mt-4">
-              <a href="#" className="text-light fs-5">
-                <i className="bi bi-facebook"></i>
+            <div className="d-flex gap-3 mt-3">
+              <a href="https://www.facebook.com/"
+                aria-label="Facebook"
+                style={linkStyle}>
+                <i className="bi bi-facebook fs-5"></i>
               </a>
 
-              <a href="#" className="text-light fs-5">
-                <i className="bi bi-instagram"></i>
+              <a href="https://www.instagram.com/"
+                aria-label="Instagram"
+                style={linkStyle}>
+                <i className="bi bi-instagram fs-5"></i>
               </a>
 
-              <a href="#" className="text-light fs-5">
-                <i className="bi bi-twitter-x"></i>
-              </a>
-
-              <a href="#" className="text-light fs-5">
-                <i className="bi bi-youtube"></i>
-              </a>
-
-              <a href="#" className="text-light fs-5">
-                <i className="bi bi-linkedin"></i>
+              <a href="https://www.linkedin.com/"
+                aria-label="LinkedIn"
+                style={linkStyle}>
+                <i className="bi bi-linkedin fs-5"></i>
               </a>
             </div>
           </Col>
 
           {/* Quick Links */}
-          <Col md={2} sm={6} className="mb-4">
-            <h5 className="fw-bold mb-3">Quick Links</h5>
+          <Col lg={2} md={6}>
+            <h5 className="fw-bold text-white mb-3">
+              Quick Links
+            </h5>
 
-            <ul className="list-unstyled">
-              <li className="mb-2">
-                <a href="/" className="text-secondary text-decoration-none">
-                  Home
-                </a>
-              </li>
-              <li className="mb-2">
-                <a href="/cart" className="text-secondary text-decoration-none">
-                  Cart
-                </a>
-              </li>
-              <li className="mb-2">
-                <a href="/checkout" className="text-secondary text-decoration-none">
-                  CheckOut
-                </a>
-              </li>
-            </ul>
-          </Col>
+            <div>
+              <Link to="/" style={linkStyle}>
+                <i className="bi bi-house me-2"></i>
+                Home
+              </Link>
+            </div>
 
-          {/* Categories */}
-          <Col md={2} sm={6} className="mb-4">
-            <h5 className="fw-bold mb-3">Categories</h5>
+            <div>
+              <Link to="/myorders" style={linkStyle}>
+                <i className="bi bi-bag-check me-2"></i>
+                My Orders
+              </Link>
+            </div>
 
-            <ul className="list-unstyled">
-              <li className="mb-2 text-secondary">Fiction</li>
-              <li className="mb-2 text-secondary">Technology</li>
-              <li className="mb-2 text-secondary">Education</li>
-              <li className="mb-2 text-secondary">Business</li>
-              <li className="text-secondary">Self Development</li>
-            </ul>
+            <div>
+              <Link to="/cart" style={linkStyle}>
+                <i className="bi bi-cart3 me-2"></i>
+                My Cart
+              </Link>
+            </div>
           </Col>
 
           {/* Customer Support */}
-          <Col md={4} className="mb-4">
-            <h5 className="fw-bold mb-3">Customer Support</h5>
+          <Col lg={3} md={6}>
+            <h5 className="fw-bold text-white mb-3">
+              Customer Support
+            </h5>
 
-            <p className="text-secondary mb-2">
-              <i className="bi bi-geo-alt-fill me-2"></i>
-              Ghaziabad, India
+            <p className="mb-3">
+              <i className="bi bi-headset me-2"></i>
+              We're here to help
             </p>
 
-            <p className="text-secondary mb-2">
-              <i className="bi bi-telephone-fill me-2"></i>
-              +91 8171xxxx32
+            <Link to="/contact" style={linkStyle}>
+              <i className="bi bi-envelope me-2"></i>
+              Contact Us
+            </Link>
+          </Col>
+
+          {/* Contact Information */}
+          <Col lg={3} md={6}>
+            <h5 className="fw-bold text-white mb-3">
+              Get in Touch
+            </h5>
+
+            <p>
+              <i className="bi bi-book me-2"></i>
+              Books for every reader
             </p>
 
-            <p className="text-secondary mb-2">
-              <i className="bi bi-envelope-fill me-2"></i>
-              gkp@bookstore.com
+            <p>
+              <i className="bi bi-truck me-2"></i>
+              Convenient book delivery
             </p>
 
-            <p className="text-secondary">
-              <i className="bi bi-clock-fill me-2"></i>
-              Mon - Sun: 8:00 AM - 10:00 PM
+            <p>
+              <i className="bi bi-shield-check me-2"></i>
+              Secure online payments
             </p>
           </Col>
 
         </Row>
+
+        <hr
+          className="my-4"
+          style={{
+            borderColor: "#99F6E4",
+            opacity: 0.6
+          }}
+        />
+
+        <Row className="align-items-center text-center">
+          <Col md={6}>
+            <p className="mb-2 mb-md-0">
+              © {new Date().getFullYear()} G.K.P BookStore.
+              All rights reserved.
+            </p>
+          </Col>
+
+          <Col md={6}>
+            <span style={{ color: "#CCFBF1" }}>
+              Made with <i className="bi bi-heart-fill text-danger"></i>
+              {" "}for book lovers
+            </span>
+          </Col>
+        </Row>
       </Container>
-
-      {/* Bottom Footer */}
-      <div className="border-top border-secondary">
-        <Container>
-          <Row className="py-3 align-items-center">
-
-            <Col md={6}>
-              <p className="mb-0 text-secondary">
-                © 2026 G.K.P. BookStore. All Rights Reserved.
-              </p>
-            </Col>
-
-            <Col md={6} className="text-md-end mt-2 mt-md-0">
-              <a
-                href="/privacy"
-                className="text-secondary text-decoration-none me-3"
-              >
-                Privacy Policy
-              </a>
-
-              <a
-                href="/terms"
-                className="text-secondary text-decoration-none"
-              >
-                Terms & Conditions
-              </a>
-            </Col>
-
-          </Row>
-        </Container>
-      </div>
-
     </footer>
   );
 }
 
 export default Footer;
-

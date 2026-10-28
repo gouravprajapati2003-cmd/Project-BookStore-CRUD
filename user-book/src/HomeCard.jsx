@@ -78,7 +78,7 @@ function HomeCard () {
 
       <Container
         fluid
-        className='px-4 py-4'
+        className='px-4 pt-2 pb-4'
         style={{
           backgroundColor: '#f5f7fa',
           minHeight: '100vh'
