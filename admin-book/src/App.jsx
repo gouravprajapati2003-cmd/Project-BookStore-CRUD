@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
+import AdminNavbar from './components/AdminNavbar'
 import WelcomePage from './pages/WelcomePage/WelcomePage'
 import BookList from './pages/books/BookList'
 import AddBook from './pages/books/AddBook'
@@ -15,58 +16,48 @@ import AddPincode from './pages/PincodeAvailability/AddPincode'
 import EditPincode from './pages/PincodeAvailability/EditPincode'
 import TransactionList from './pages/Transaction/TransactionList'
 
-function App () {
+function AdminLayout () {
   return (
-    <BrowserRouter>
-      {/* <NavBar /> */}
-      <Routes>
-        <Route path='/' element={<AdminLogin />} />
-      </Routes>
+    <div style={{ minHeight: '100vh', background: '#f5f7fa' }}>
+      <AdminNavbar />
 
-      <div className='d-flex'>
+      <div className='d-flex align-items-start'>
         <Sidebar />
-        <main style={{ flexGrow: 1, padding: '20px' }}>
+
+        <main className='flex-grow-1 p-3 p-md-4' style={{ minWidth: 0 }}>
           <Routes>
             <Route path='/admin/dashboard' element={<WelcomePage />} />
 
-            {/* Welcome Page */}
-            <Route path='/' element={<WelcomePage />} />
-            <Route path='/books' element={<BookList> </BookList>}></Route>
-            <Route path='/add/book' element={<AddBook></AddBook>}></Route>
-            <Route
-              path='/edit/book/:id'
-              element={<BookPageForEdit></BookPageForEdit>}
-            ></Route>
-            <Route
-              path='/discounts'
-              element={<DiscountList></DiscountList>}
-            ></Route>
-            <Route
-              path='/add/discount'
-              element={<CreateDiscount></CreateDiscount>}
-            ></Route>
-            <Route
-              path='/edit/discount/:id'
-              element={<DiscountForEdit></DiscountForEdit>}
-            ></Route>
-            <Route path='/book/:id' element={<BookDetail></BookDetail>}></Route>
-            <Route path='/users' element={<UserList></UserList>}></Route>
-            <Route
-              path='/pincodes'
-              element={<PincodeList></PincodeList>}
-            ></Route>
-            <Route
-              path='/add/pincode'
-              element={<AddPincode></AddPincode>}
-            ></Route>
-            <Route
-              path='/edit/pincode/:id'
-              element={<EditPincode></EditPincode>}
-            ></Route>
-            <Route path='/transactions' element={<TransactionList></TransactionList>}></Route>
+            <Route path='/books' element={<BookList />} />
+            <Route path='/add/book' element={<AddBook />} />
+            <Route path='/edit/book/:id' element={<BookPageForEdit />} />
+            <Route path='/book/:id' element={<BookDetail />} />
+
+            <Route path='/discounts' element={<DiscountList />} />
+            <Route path='/add/discount' element={<CreateDiscount />} />
+            <Route path='/edit/discount/:id' element={<DiscountForEdit />} />
+
+            <Route path='/users' element={<UserList />} />
+
+            <Route path='/pincodes' element={<PincodeList />} />
+            <Route path='/add/pincode' element={<AddPincode />} />
+            <Route path='/edit/pincode/:id' element={<EditPincode />} />
+
+            <Route path='/transactions' element={<TransactionList />} />
           </Routes>
         </main>
       </div>
+    </div>
+  )
+}
+
+function App () {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path='/' element={<AdminLogin />} />
+        <Route path='/*' element={<AdminLayout />} />
+      </Routes>
     </BrowserRouter>
   )
 }
