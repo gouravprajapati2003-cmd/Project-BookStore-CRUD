@@ -1,6 +1,31 @@
 import { createSlice } from '@reduxjs/toolkit'
 
-const getPrice = product => Number(product.originalPrice ?? product.price ?? 0)
+const getPrice = product => {
+  const originalPrice = Number(product.originalPrice ?? product.price ?? 0)
+
+  const discountValue = Number(product.discountValue || 0)
+
+  const hasDiscount =
+    product.status?.toLowerCase() === 'active' && discountValue > 0
+
+  if (!hasDiscount) return originalPrice
+
+  if (product.discountType === 'Percentage') {
+    return Math.max(0, originalPrice - (originalPrice * discountValue) / 100)
+  }
+
+  if (product.discountType === 'Fixed') {
+    return Math.max(0, originalPrice - discountValue)
+  }
+
+  return originalPrice
+}
+
+const calculateTotal = products => {
+  return products.reduce((total, product) => {
+    return total + getPrice(product) * Number(product.quantity || 1)
+  }, 0)
+}
 
 const initialState = {
   products: [],
@@ -14,28 +39,44 @@ const cartSlice = createSlice({
   reducers: {
     addProduct: (state, action) => {
       const newProduct = action.payload
-      const exists = state.products.some(item => item._id === newProduct._id)
+
+      const exists = state.products.find(item => item._id === newProduct._id)
 
       if (exists) {
-        state.message = 'Item already added to cart'
-        return
+        exists.quantity =
+          Number(exists.quantity || 1) + Number(newProduct.quantity || 1)
+
+        state.message = 'Item quantity updated successfully'
+      } else {
+        state.products.push({
+          ...newProduct,
+          quantity: Math.max(1, Number(newProduct.quantity || 1))
+        })
+
+        state.message = 'Item added to cart successfully'
       }
 
-      state.products.push(newProduct)
-      state.totalCost += getPrice(newProduct)
-      state.message = 'Item added to cart successfully'
+      state.totalCost = calculateTotal(state.products)
+    },
+
+    updateQuantity: (state, action) => {
+      const { id, quantity } = action.payload
+
+      const product = state.products.find(item => item._id === id)
+
+      if (product) {
+        product.quantity = Math.max(1, Number(quantity || 1))
+        state.totalCost = calculateTotal(state.products)
+        state.message = 'Item quantity updated successfully'
+      }
     },
 
     deleteProduct: (state, action) => {
-      const product = state.products.find(item => item._id === action.payload)
+      state.products = state.products.filter(
+        item => item._id !== action.payload
+      )
 
-      if (product) {
-        state.totalCost -= getPrice(product)
-        state.products = state.products.filter(
-          item => item._id !== action.payload
-        )
-      }
-
+      state.totalCost = calculateTotal(state.products)
       state.message = 'Item removed from cart'
     },
 
@@ -51,7 +92,12 @@ const cartSlice = createSlice({
   }
 })
 
-export const { addProduct, deleteProduct, deleteCart, clearCartMessage } =
-  cartSlice.actions
+export const {
+  addProduct,
+  updateQuantity,
+  deleteProduct,
+  deleteCart,
+  clearCartMessage
+} = cartSlice.actions
 
 export default cartSlice.reducer

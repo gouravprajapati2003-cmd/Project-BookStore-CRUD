@@ -7,11 +7,16 @@ import {
   Form,
   Button,
   Alert,
-  Spinner
+  Spinner,
+  Badge
 } from 'react-bootstrap'
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
-import { deleteCart, clearCartMessage } from './feactures/cart/cartSlice'
+import {
+  deleteCart,
+  clearCartMessage,
+  updateQuantity
+} from './feactures/cart/cartSlice'
 
 const apiUrl = import.meta.env.VITE_API_URL
 const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID
@@ -29,11 +34,38 @@ const initialShippingDetails = {
   pincode: ''
 }
 
-function CheckOut () {
+function getBookPrice(product) {
+  const originalPrice = Number(
+    product.originalPrice ?? product.price ?? 0
+  )
+
+  const discountValue = Number(product.discountValue || 0)
+
+  const hasDiscount =
+    product.status?.toLowerCase() === 'active' &&
+    discountValue > 0
+
+  if (!hasDiscount) return originalPrice
+
+  if (product.discountType === 'Percentage') {
+    return Math.max(
+      0,
+      originalPrice - (originalPrice * discountValue) / 100
+    )
+  }
+
+  if (product.discountType === 'Fixed') {
+    return Math.max(0, originalPrice - discountValue)
+  }
+
+  return originalPrice
+}
+
+function CheckOut() {
   const navigate = useNavigate()
   const dispatch = useDispatch()
 
-  const { products, totalCost } = useSelector(state => state.cart)
+  const { products } = useSelector(state => state.cart)
 
   const [shipping, setShipping] = useState(initialShippingDetails)
   const [authChecking, setAuthChecking] = useState(true)
@@ -41,7 +73,35 @@ function CheckOut () {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  // Check login before showing checkout
+  const orderProducts = products.map(product => {
+    const quantity = Math.max(1, Number(product.quantity || 1))
+    const originalPrice = Number(
+      product.originalPrice ?? product.price ?? 0
+    )
+    const finalPrice = getBookPrice(product)
+
+    return {
+      ...product,
+      quantity,
+      originalPrice,
+      finalPrice,
+      subtotal: finalPrice * quantity
+    }
+  })
+
+  const totalOriginalPrice = orderProducts.reduce(
+    (total, product) =>
+      total + product.originalPrice * product.quantity,
+    0
+  )
+
+  const totalCost = orderProducts.reduce(
+    (total, product) => total + product.subtotal,
+    0
+  )
+
+  const totalSavings = totalOriginalPrice - totalCost
+
   useEffect(() => {
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true'
     const email = localStorage.getItem('email')
@@ -49,7 +109,6 @@ function CheckOut () {
     if (!isLoggedIn || !email) {
       sessionStorage.setItem('openLoginModal', 'true')
       sessionStorage.setItem('openCheckoutAfterLogin', 'true')
-
       navigate('/', { replace: true })
       return
     }
@@ -62,6 +121,12 @@ function CheckOut () {
     setAuthChecking(false)
   }, [navigate])
 
+  useEffect(() => {
+    if (!authChecking && products.length === 0) {
+      navigate('/cart', { replace: true })
+    }
+  }, [products.length, authChecking, navigate])
+
   const handleChange = e => {
     const { name, value } = e.target
 
@@ -71,7 +136,28 @@ function CheckOut () {
     }))
   }
 
-  // Load Razorpay checkout script
+  const increaseQuantity = product => {
+    dispatch(
+      updateQuantity({
+        id: product._id,
+        quantity: Number(product.quantity || 1) + 1
+      })
+    )
+  }
+
+  const decreaseQuantity = product => {
+    const currentQuantity = Number(product.quantity || 1)
+
+    if (currentQuantity > 1) {
+      dispatch(
+        updateQuantity({
+          id: product._id,
+          quantity: currentQuantity - 1
+        })
+      )
+    }
+  }
+
   const loadRazorpayScript = () => {
     return new Promise(resolve => {
       if (window.Razorpay) {
@@ -84,19 +170,36 @@ function CheckOut () {
       )
 
       if (existingScript) {
-        existingScript.addEventListener('load', () => resolve(true), {
-          once: true
-        })
-        existingScript.addEventListener('error', () => resolve(false), {
-          once: true
-        })
+        if (existingScript.dataset.loaded === 'true') {
+          resolve(true)
+          return
+        }
+
+        existingScript.addEventListener(
+          'load',
+          () => resolve(true),
+          { once: true }
+        )
+
+        existingScript.addEventListener(
+          'error',
+          () => resolve(false),
+          { once: true }
+        )
+
         return
       }
 
       const script = document.createElement('script')
+
       script.src = 'https://checkout.razorpay.com/v1/checkout.js'
       script.async = true
-      script.onload = () => resolve(true)
+
+      script.onload = () => {
+        script.dataset.loaded = 'true'
+        resolve(true)
+      }
+
       script.onerror = () => resolve(false)
 
       document.body.appendChild(script)
@@ -104,7 +207,8 @@ function CheckOut () {
   }
 
   const handlePayment = async e => {
-    e?.preventDefault()
+    e.preventDefault()
+
     setError('')
     setSuccess('')
 
@@ -162,7 +266,7 @@ function CheckOut () {
       return
     }
 
-    if (!Number.isFinite(Number(totalCost)) || Number(totalCost) <= 0) {
+    if (!Number.isFinite(totalCost) || totalCost <= 0) {
       setError('The total amount must be greater than zero.')
       return
     }
@@ -179,17 +283,25 @@ function CheckOut () {
       const orderPayload = {
         ...shipping,
         email: savedEmail.trim().toLowerCase(),
-        amount: Number(totalCost),
-        products: products.map(product => ({
+        amount: Number(totalCost.toFixed(2)),
+        products: orderProducts.map(product => ({
           bookId: product._id,
           bookTitle:
-            product.bookTittle || product.bookTitle || product.title || 'Book',
+            product.bookTittle ||
+            product.bookTitle ||
+            product.title ||
+            'Book',
           bookImage: product.bookImage || '',
-          originalPrice: Number(product.originalPrice ?? product.price ?? 0)
+          quantity: product.quantity,
+          originalPrice: product.originalPrice,
+          discountValue: Number(product.discountValue || 0),
+          discountType: product.discountType || '',
+          discountStatus: product.status || '',
+          finalPrice: product.finalPrice,
+          subtotal: product.subtotal
         }))
       }
 
-      // Create Razorpay order in backend
       const orderResponse = await axios.post(
         `${apiUrl}/create-order`,
         orderPayload
@@ -225,13 +337,15 @@ function CheckOut () {
 
         handler: async paymentResponse => {
           try {
-            // Verify payment with backend
             const verifyResponse = await axios.post(
               `${apiUrl}/verify-payment`,
               {
-                razorpay_order_id: paymentResponse.razorpay_order_id,
-                razorpay_payment_id: paymentResponse.razorpay_payment_id,
-                razorpay_signature: paymentResponse.razorpay_signature
+                razorpay_order_id:
+                  paymentResponse.razorpay_order_id,
+                razorpay_payment_id:
+                  paymentResponse.razorpay_payment_id,
+                razorpay_signature:
+                  paymentResponse.razorpay_signature
               }
             )
 
@@ -239,25 +353,30 @@ function CheckOut () {
               throw new Error('Payment verification failed.')
             }
 
-            // Clear cart only after backend confirms payment
             dispatch(deleteCart())
             dispatch(clearCartMessage())
 
             setShipping(initialShippingDetails)
-            setSuccess('Payment successful! Redirecting to My Orders...')
+            setSuccess(
+              'Payment successful! Redirecting to My Orders...'
+            )
             setError('')
+            setLoading(false)
 
             setTimeout(() => {
               navigate('/myorders', { replace: true })
             }, 1000)
           } catch (verificationError) {
-            console.error('Payment verification error:', verificationError)
+            console.error(
+              'Payment verification error:',
+              verificationError
+            )
 
             setError(
               verificationError.response?.data?.message ||
                 'Payment was submitted, but verification could not be confirmed. Please check My Orders before retrying.'
             )
-          } finally {
+
             setLoading(false)
           }
         },
@@ -275,7 +394,8 @@ function CheckOut () {
         console.error('Razorpay payment failed:', response.error)
 
         setError(
-          response.error?.description || 'Payment failed. Please try again.'
+          response.error?.description ||
+            'Payment failed. Please try again.'
         )
 
         setLoading(false)
@@ -304,25 +424,39 @@ function CheckOut () {
     )
   }
 
+  if (products.length === 0) {
+    return (
+      <Container className='text-center py-5'>
+        <Spinner animation='border' />
+        <p className='mt-2'>Redirecting to cart...</p>
+      </Container>
+    )
+  }
+
   return (
     <Container className='py-4'>
       <h2 className='mb-4'>
-        <i className='bi bi-credit-card me-2'></i>
+        <i className='bi bi-credit-card me-2' />
         Checkout
       </h2>
 
       {error && (
-        <Alert variant='danger' dismissible onClose={() => setError('')}>
+        <Alert
+          variant='danger'
+          dismissible
+          onClose={() => setError('')}
+        >
           {error}
         </Alert>
       )}
 
-      {success && <Alert variant='success'>{success}</Alert>}
+      {success && (
+        <Alert variant='success'>{success}</Alert>
+      )}
 
       <Row className='g-4'>
-        {/* Shipping Details */}
         <Col lg={8}>
-          <Form onSubmit={handlePayment}>
+          <Form id='checkout-form' onSubmit={handlePayment}>
             <h5 className='mb-3'>Shipping Details</h5>
 
             <Row>
@@ -368,14 +502,25 @@ function CheckOut () {
                 type='tel'
                 name='mobileNo'
                 value={shipping.mobileNo}
-                onChange={handleChange}
+                onChange={e => {
+                  const value = e.target.value
+                    .replace(/\D/g, '')
+                    .slice(0, 10)
+
+                  setShipping(previous => ({
+                    ...previous,
+                    mobileNo: value
+                  }))
+                }}
                 maxLength={10}
                 inputMode='numeric'
                 required
               />
             </Form.Group>
 
-            <h5 className='mt-3 text-primary'>Shipping Address</h5>
+            <h5 className='mt-3 text-primary'>
+              Shipping Address
+            </h5>
 
             <Form.Group className='mb-3'>
               <Form.Label>Address Line 1</Form.Label>
@@ -443,7 +588,16 @@ function CheckOut () {
                     inputMode='numeric'
                     name='pincode'
                     value={shipping.pincode}
-                    onChange={handleChange}
+                    onChange={e => {
+                      const value = e.target.value
+                        .replace(/\D/g, '')
+                        .slice(0, 6)
+
+                      setShipping(previous => ({
+                        ...previous,
+                        pincode: value
+                      }))
+                    }}
                     maxLength={6}
                     required
                   />
@@ -453,96 +607,182 @@ function CheckOut () {
           </Form>
         </Col>
 
-        {/* Product Summary */}
         <Col lg={4}>
           <div className='border rounded p-3 shadow-sm'>
-            <h4 className='text-center text-danger'>Product Summary</h4>
+            <h4 className='text-center text-danger'>
+              Product Summary
+            </h4>
 
-            {products.length === 0 ? (
-              <Alert variant='info' className='mt-3'>
-                Your cart is empty.
-              </Alert>
-            ) : (
-              <div className='table-responsive'>
-                <table className='table mt-3 align-middle'>
-                  <thead>
-                    <tr>
-                      <th>Image</th>
-                      <th>Book Name</th>
-                      <th>Price</th>
-                    </tr>
-                  </thead>
+            <div className='table-responsive'>
+              <table className='table mt-3 align-middle'>
+                <thead>
+                  <tr>
+                    <th>Image</th>
+                    <th>Book Details</th>
+                    <th>Subtotal</th>
+                  </tr>
+                </thead>
 
-                  <tbody>
-                    {products.map(product => (
-                      <tr key={product._id}>
-                        <td>
-                          <img
-                            src={product.bookImage}
-                            alt={
-                              product.bookTittle || product.bookTitle || 'Book'
-                            }
-                            width='40'
-                            height='50'
-                            style={{ objectFit: 'cover' }}
-                          />
-                        </td>
+                <tbody>
+                  {orderProducts.map(product => (
+                    <tr key={product._id}>
+                      <td>
+                        <img
+                          src={product.bookImage}
+                          alt={
+                            product.bookTittle ||
+                            product.bookTitle ||
+                            'Book'
+                          }
+                          width='45'
+                          height='55'
+                          style={{ objectFit: 'contain' }}
+                        />
+                      </td>
 
-                        <td>
+                      <td>
+                        <div className='fw-semibold'>
                           {product.bookTittle ||
                             product.bookTitle ||
                             product.title ||
                             'Book'}
-                        </td>
+                        </div>
 
-                        <td>
-                          ₹
-                          {Number(
-                            product.originalPrice ?? product.price ?? 0
-                          ).toLocaleString('en-IN')}
-                        </td>
-                      </tr>
-                    ))}
+                        <small className='text-muted d-block'>
+                          ₹{product.finalPrice.toFixed(2)} ×{' '}
+                          {product.quantity}
+                        </small>
 
-                    <tr>
-                      <td colSpan={2}>
-                        <strong>Total Cost</strong>
+                        <div className='d-flex align-items-center gap-2 mt-2'>
+                          <Button
+                            type='button'
+                            variant='outline-secondary'
+                            size='sm'
+                            disabled={
+                              product.quantity <= 1 || loading
+                            }
+                            onClick={() =>
+                              decreaseQuantity(product)
+                            }
+                          >
+                            −
+                          </Button>
+
+                          <span className='fw-semibold'>
+                            {product.quantity}
+                          </span>
+
+                          <Button
+                            type='button'
+                            variant='outline-primary'
+                            size='sm'
+                            disabled={loading}
+                            onClick={() =>
+                              increaseQuantity(product)
+                            }
+                          >
+                            +
+                          </Button>
+                        </div>
+
+                        {product.finalPrice <
+                          product.originalPrice && (
+                          <div className='mt-1'>
+                            <Badge bg='success'>
+                              {product.status?.toLowerCase() ===
+                              'active'
+                                ? product.discountType ===
+                                  'Percentage'
+                                  ? `${product.discountValue}% Off`
+                                  : `₹${product.discountValue} Off`
+                                : 'Discount'}
+                            </Badge>
+                          </div>
+                        )}
                       </td>
-                      <td>
-                        <strong>
-                          ₹{Number(totalCost || 0).toLocaleString('en-IN')}
-                        </strong>
+
+                      <td className='fw-semibold'>
+                        ₹{product.subtotal.toFixed(2)}
                       </td>
                     </tr>
-                  </tbody>
-                </table>
-                <div className='d-flex justify-content-center mt-2'>
-                  <Button
-                    type='submit'
-                    variant='warning'
-                    size='lg'
-                    className='mt-2'
-                    onClick={() => handlePayment()}
-                    disabled={loading || products.length === 0}
-                  >
-                    {loading ? (
-                      <>
-                        <Spinner
-                          animation='border'
-                          size='sm'
-                          className='me-2'
-                        />
-                        Processing...
-                      </>
-                    ) : (
-                      `Pay Now ₹${Number(totalCost || 0).toLocaleString(
-                        'en-IN'
-                      )}`
-                    )}
-                  </Button>
-                </div>
-              </div>
-            )}
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <hr />
+
+            <div className='d-flex justify-content-between mb-2'>
+              <span className='text-muted'>
+                Original Price
+              </span>
+              <span>
+                ₹
+                {totalOriginalPrice.toLocaleString('en-IN', {
+                  maximumFractionDigits: 2
+                })}
+              </span>
+            </div>
+
+            <div className='d-flex justify-content-between mb-2'>
+              <span className='text-success'>
+                Total Savings
+              </span>
+              <span className='text-success fw-semibold'>
+                - ₹
+                {totalSavings.toLocaleString('en-IN', {
+                  maximumFractionDigits: 2
+                })}
+              </span>
+            </div>
+
+            <hr />
+
+            <div className='d-flex justify-content-between align-items-center'>
+              <strong className='fs-5'>
+                Total Amount
+              </strong>
+
+              <strong className='fs-5 text-success'>
+                ₹
+                {totalCost.toLocaleString('en-IN', {
+                  maximumFractionDigits: 2
+                })}
+              </strong>
+            </div>
+
+            <Button
+              type='submit'
+              form='checkout-form'
+              variant='warning'
+              size='lg'
+              className='w-100 fw-semibold mt-4'
+              disabled={loading || products.length === 0}
+            >
+              {loading ? (
+                <>
+                  <Spinner
+                    animation='border'
+                    size='sm'
+                    className='me-2'
+                  />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  Pay Now ₹
+                  {totalCost.toLocaleString('en-IN', {
+                    maximumFractionDigits: 2
+                  })}
+                  <i className='bi bi-arrow-right ms-2' />
+                </>
+              )}
+            </Button>
+
+            <div className='text-center text-muted small mt-3'>
+              <i className='bi bi-shield-lock-fill me-1 text-success' />
+              Secure payment powered by Razorpay
+            </div>
           </div>
         </Col>
       </Row>
