@@ -199,7 +199,7 @@ function HomeCard () {
           <div>
             <h2 className='section-heading mb-1'>Explore Our Collection</h2>
             <p className='section-subtitle mb-0'>
-              Discover your next favourite book
+              Find Your Next Favourite Book at G.K.P BookStore
             </p>
           </div>
 
