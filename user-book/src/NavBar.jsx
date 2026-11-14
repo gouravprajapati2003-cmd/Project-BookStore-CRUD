@@ -18,29 +18,42 @@ function NavBar () {
   const location = useLocation()
   const { products } = useSelector(state => state.cart)
 
+  // Login Status
   useEffect(() => {
     const flag = localStorage.getItem('isLoggedIn')
 
     setIsLoggedIn(flag === 'true')
     setUserName(localStorage.getItem('name') || '')
 
-    // Open login modal when checkout requests login
     if (sessionStorage.getItem('openLoginModal') === 'true') {
       sessionStorage.removeItem('openLoginModal')
       setShowLoginModal(true)
     }
   }, [location.pathname])
 
-  function goForLogin () {
-    setShowLoginModal(true)
+  // URL se Search Value Sync
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    setSearchBook(params.get('search') || '')
+  }, [location.search])
+
+  // Live Search
+  function handleSearch (e) {
+    const value = e.target.value
+
+    setSearchBook(value)
+
+    if (value.trim()) {
+      navigate('/?search=' + encodeURIComponent(value), {
+        replace: true
+      })
+    } else {
+      navigate('/', { replace: true })
+    }
   }
 
-  function handleSearch (e) {
-    e.preventDefault()
-
-    if (searchBook.trim() !== '') {
-      console.log('Searching:', searchBook.trim())
-    }
+  function goForLogin () {
+    setShowLoginModal(true)
   }
 
   function handleLogout () {
@@ -76,18 +89,50 @@ function NavBar () {
 
   return (
     <>
+      <style>
+        {`
+          .store-navbar {
+            background: #142D4E;
+            border-radius: 10px;
+          }
+
+          .store-navbar .nav-link {
+            transition: color 0.2s ease;
+          }
+
+          .store-navbar .nav-link:hover {
+            color: #8fe7d8 !important;
+          }
+
+          .navbar-search {
+            max-width: 380px;
+            min-width: 180px;
+          }
+
+          .navbar-search .form-control {
+            height: 42px;
+            border: none;
+            box-shadow: none;
+          }
+
+          @media (max-width: 1199px) {
+            .navbar-search {
+              max-width: 100%;
+            }
+          }
+        `}
+      </style>
+
       <Navbar
         expand='xl'
-        className='shadow-sm sticky-top mx-3 mt-2'
+        className='store-navbar shadow-sm sticky-top mx-3 mt-2'
         style={{
-          backgroundColor: '#142D4E',
           minHeight: '72px',
-          borderRadius: '10px',
           zIndex: 1030
         }}
       >
         <Container fluid className='px-3'>
-          {/* Logo and Brand */}
+          {/* Logo */}
           <Navbar.Brand
             as={Link}
             to='/'
@@ -102,12 +147,7 @@ function NavBar () {
               style={{ objectFit: 'cover' }}
             />
 
-            <span
-              style={{
-                fontSize: '1.35rem',
-                whiteSpace: 'nowrap'
-              }}
-            >
+            <span style={{ fontSize: '1.3rem', whiteSpace: 'nowrap' }}>
               G.K.P. BookStore
             </span>
           </Navbar.Brand>
@@ -115,42 +155,45 @@ function NavBar () {
           <Navbar.Toggle aria-controls='navbar-content' className='bg-light' />
 
           <Navbar.Collapse id='navbar-content'>
-            {/* Search Bar */}
+            {/* Navbar Live Search */}
             <Form
-              className='d-flex my-3 my-xl-0 mx-xl-3 flex-grow-1'
-              onSubmit={handleSearch}
-              style={{
-                maxWidth: '350px',
-                minWidth: '180px'
-              }}
+              className='d-flex my-3 my-xl-0 mx-xl-3 flex-grow-1 navbar-search'
+              onSubmit={e => e.preventDefault()}
             >
               <div className='input-group'>
                 <Form.Control
                   type='search'
                   placeholder='Search books, authors...'
                   value={searchBook}
-                  onChange={e => setSearchBook(e.target.value)}
-                  className='border-0 shadow-none'
+                  onChange={handleSearch}
+                  aria-label='Search books and authors'
                   style={{
-                    height: '42px',
-                    minWidth: 0,
                     borderRadius: '5px 0 0 5px'
                   }}
                 />
 
-                <Button
-                  type='submit'
-                  variant='light'
-                  aria-label='Search books'
-                  className='border-0'
+                {searchBook && (
+                  <Button
+                    type='button'
+                    variant='light'
+                    onClick={() => {
+                      setSearchBook('')
+                      navigate('/', { replace: true })
+                    }}
+                    aria-label='Clear search'
+                  >
+                    <i className='bi bi-x-lg'></i>
+                  </Button>
+                )}
+
+                <span
+                  className='input-group-text bg-white text-primary'
                   style={{
-                    color: '#2874f0',
-                    borderRadius: '0 5px 5px 0',
-                    width: '48px'
+                    borderRadius: '0 5px 5px 0'
                   }}
                 >
-                  <i className='bi bi-search fs-5'></i>
-                </Button>
+                  <i className='bi bi-search'></i>
+                </span>
               </div>
             </Form>
 
@@ -160,7 +203,6 @@ function NavBar () {
                 as={Link}
                 to='/'
                 className='text-white fw-semibold px-2'
-                style={{ whiteSpace: 'nowrap' }}
               >
                 <i className='bi bi-house-door me-1'></i>
                 Home
@@ -169,7 +211,6 @@ function NavBar () {
               <Nav.Link
                 href='/#contact'
                 className='text-white fw-semibold px-2'
-                style={{ whiteSpace: 'nowrap' }}
               >
                 <i className='bi bi-telephone me-1'></i>
                 Contact
@@ -178,11 +219,7 @@ function NavBar () {
               <Nav.Link
                 onClick={goToCartPage}
                 className='text-white fw-semibold px-2'
-                style={{
-                  position: 'relative',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap'
-                }}
+                style={{ position: 'relative', cursor: 'pointer' }}
               >
                 <i className='bi bi-cart me-1'></i>
                 Cart
@@ -206,21 +243,17 @@ function NavBar () {
                 as={Link}
                 to='/myorders'
                 className='text-white fw-semibold px-2'
-                style={{ whiteSpace: 'nowrap' }}
               >
                 <i className='bi bi-bag-check me-1'></i>
                 My Orders
               </Nav.Link>
             </Nav>
 
-            {/* User and Logout Section */}
+            {/* Login / Logout */}
             <div className='d-flex align-items-center gap-2 ms-xl-3 my-3 my-xl-0'>
               {isLoggedIn ? (
                 <>
-                  <span
-                    className='text-white fw-semibold'
-                    style={{ whiteSpace: 'nowrap' }}
-                  >
+                  <span className='text-white fw-semibold'>
                     <i className='bi bi-person-circle me-1'></i>
                     Welcome, {userName}
                   </span>
@@ -230,7 +263,6 @@ function NavBar () {
                     size='sm'
                     className='fw-semibold px-3'
                     onClick={handleLogout}
-                    style={{ whiteSpace: 'nowrap' }}
                   >
                     Logout
                   </Button>
@@ -240,7 +272,6 @@ function NavBar () {
                   variant='success'
                   className='fw-semibold px-4'
                   onClick={goForLogin}
-                  style={{ whiteSpace: 'nowrap' }}
                 >
                   <i className='bi bi-person me-1'></i>
                   Login

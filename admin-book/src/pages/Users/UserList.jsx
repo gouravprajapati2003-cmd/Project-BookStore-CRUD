@@ -39,7 +39,10 @@ function UserList () {
       }
     })
       .then(res => {
-        setUsers(res.data.data || [])
+        const customerUsers = (res.data.data || []).filter(
+          user => user.userType === 'user' && user.isSuperAdmin !== true
+        )
+        setUsers(customerUsers)
       })
       .catch(err => {
         alert(err.response?.data?.message || 'Unable to fetch users')

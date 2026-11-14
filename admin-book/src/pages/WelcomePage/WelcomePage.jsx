@@ -26,6 +26,7 @@ import { useNavigate } from 'react-router-dom'
 function WelcomePage () {
   const [username, setUserName] = useState('Admin')
   let navigate = useNavigate()
+  const [time, setTime] = useState('')
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -68,11 +69,24 @@ function WelcomePage () {
     month: 'long',
     year: 'numeric'
   })
-  const time = new Date().toLocaleTimeString('en-IN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
-  })
+  useEffect(() => {
+    const updateTime = () => {
+      const currentTime = new Date().toLocaleTimeString('en-IN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      })
+
+      setTime(currentTime.replace(/\b(am|pm)\b/i, match => match.toUpperCase()))
+    }
+
+    updateTime()
+
+    const interval = setInterval(updateTime, 1000)
+
+    return () => clearInterval(interval)
+  }, [])
 
   return (
     <Container fluid className='px-3 px-md-4 py-4'>

@@ -1,27 +1,64 @@
 import axios from 'axios'
-import { useState, useEffect } from 'react'
-import { Container, Row, Col, Card, Button, Badge } from 'react-bootstrap'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useMemo } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Button,
+  Badge,
+  Spinner
+} from 'react-bootstrap'
 import ImageSlider from './ImageSlider.jsx'
 
 const apiUrl = import.meta.env.VITE_API_URL
 
 function HomeCard () {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+
+  // Navbar se Search Value
+  const searchBook = searchParams.get('search') || ''
+
   const [books, setBooks] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+
+  // Fetch Books
+  async function fetchBooks () {
+    try {
+      setLoading(true)
+      setError(false)
+
+      const res = await axios.get(`${apiUrl}/user/books`)
+
+      setBooks(Array.isArray(res.data.data) ? res.data.data : [])
+    } catch (err) {
+      console.error('Error fetching books:', err)
+      setError(true)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    axios({
-      url: apiUrl + '/user/books',
-      method: 'get'
-    })
-      .then(res => {
-        setBooks(Array.isArray(res.data.data) ? res.data.data : [])
-      })
-      .catch(err => {
-        console.error('Error fetching books:', err)
-      })
+    fetchBooks()
   }, [])
+
+  // Filter Books Using Navbar Search
+  const filteredBooks = useMemo(() => {
+    const search = searchBook.trim().toLowerCase()
+
+    if (!search) return books
+
+    return books.filter(book => {
+      const title = String(book.bookTittle || '').toLowerCase()
+      const author = String(book.authorName || '').toLowerCase()
+
+      return title.includes(search) || author.includes(search)
+    })
+  }, [books, searchBook])
 
   function goToDetailPage (id) {
     navigate('/user/book/detail/' + id)
@@ -38,8 +75,8 @@ function HomeCard () {
 
           .section-heading {
             color: #172b4d;
-            font-size: 26px;
-            font-weight: 750;
+            font-size: 27px;
+            font-weight: 800;
             letter-spacing: -0.6px;
           }
 
@@ -56,18 +93,18 @@ function HomeCard () {
             overflow: hidden;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 3px 14px rgba(20, 40, 80, 0.04);
+            box-shadow: 0 3px 14px rgba(20,40,80,0.04);
           }
 
           .book-card:hover {
-            transform: translateY(-7px);
-            box-shadow: 0 14px 35px rgba(20, 40, 80, 0.12);
+            transform: translateY(-6px);
+            box-shadow: 0 14px 35px rgba(20,40,80,0.12);
             border-color: #d8e5ff !important;
           }
 
           .book-image-area {
-            height: 220px;
-            background: linear-gradient(145deg, #f8faff, #eef3fc);
+            height: 230px;
+            background: linear-gradient(145deg,#f8faff,#eef3fc);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -76,15 +113,15 @@ function HomeCard () {
           }
 
           .book-image {
-            width: 145px;
-            height: 185px;
+            width: 155px;
+            height: 195px;
             object-fit: contain;
             transition: transform 0.4s ease;
             filter: drop-shadow(0 7px 7px rgba(0,0,0,0.13));
           }
 
           .book-card:hover .book-image {
-            transform: scale(1.07) rotate(-1deg);
+            transform: scale(1.06) rotate(-1deg);
           }
 
           .discount-badge {
@@ -97,7 +134,7 @@ function HomeCard () {
             padding: 5px 9px;
             font-size: 11px;
             font-weight: 700;
-            letter-spacing: 0.3px;
+            z-index: 1;
           }
 
           .availability-badge {
@@ -129,7 +166,7 @@ function HomeCard () {
 
           .book-price {
             color: #172b4d;
-            font-size: 23px;
+            font-size: 22px;
             font-weight: 800;
           }
 
@@ -156,7 +193,6 @@ function HomeCard () {
 
           .view-details-btn:hover {
             background: #0d51b7 !important;
-            transform: translateY(-1px);
           }
 
           .empty-books {
@@ -195,9 +231,11 @@ function HomeCard () {
       <Container fluid className='home-container px-3 px-md-4 pt-3 pb-5'>
         <ImageSlider />
 
-        <div className='d-flex justify-content-between align-items-center flex-wrap gap-2 mt-4 mb-3'>
+        {/* Collection Heading */}
+        <div className='d-flex justify-content-between align-items-center flex-wrap gap-3 mt-4 mb-3'>
           <div>
             <h2 className='section-heading mb-1'>Explore Our Collection</h2>
+
             <p className='section-subtitle mb-0'>
               Find Your Next Favourite Book at G.K.P BookStore
             </p>
@@ -218,116 +256,189 @@ function HomeCard () {
           </Badge>
         </div>
 
-        <Row className='g-3 g-lg-4 mt-1'>
-          {books.map(book => {
-            const discount = book.DiscountDetail?.[0]
+        {/* Search Result Information */}
+        {!loading && !error && searchBook.trim() && (
+          <div className='mb-3 text-secondary'>
+            Search results for <strong>"{searchBook}"</strong>:{' '}
+            {filteredBooks.length} books found
+          </div>
+        )}
 
-            const hasDiscount =
-              discount?.status === 'Active' &&
-              Number(discount?.discountValue) > 0
+        {/* Loading */}
+        {loading && (
+          <div className='text-center py-5'>
+            <Spinner
+              animation='border'
+              role='status'
+              style={{
+                color: '#1769e0',
+                width: '3rem',
+                height: '3rem'
+              }}
+            />
 
-            const originalPrice = Number(book.originalPrice || 0)
-
-            const finalPrice = hasDiscount
-              ? originalPrice -
-                (originalPrice * Number(discount.discountValue)) / 100
-              : originalPrice
-
-            return (
-              <Col key={book._id} xs={12} sm={6} md={4} xl={3}>
-                <Card
-                  onClick={() => goToDetailPage(book._id)}
-                  className='book-card'
-                >
-                  <div className='book-image-area'>
-                    {hasDiscount && (
-                      <span className='discount-badge'>
-                        {discount.discountValue}% OFF
-                      </span>
-                    )}
-
-                    <img
-                      className='book-image'
-                      src={book.bookImage}
-                      alt={book.bookTittle}
-                    />
-                  </div>
-
-                  <Card.Body className='d-flex flex-column p-3'>
-                    <div className='d-flex justify-content-between align-items-center mb-2'>
-                      <span className='availability-badge'>
-                        <i className='bi bi-check-circle-fill me-1'></i>
-                        Available
-                      </span>
-
-                      <span
-                        className='text-warning'
-                        style={{ fontSize: '12px' }}
-                      >
-                        <i className='bi bi-star-fill me-1'></i>
-                        {book.rating || 'New'}
-                      </span>
-                    </div>
-
-                    <Card.Title className='book-title mb-2'>
-                      {book.bookTittle}
-                    </Card.Title>
-
-                    <div className='book-meta mb-2'>
-                      <i className='bi bi-person me-2'></i>
-                      {book.authorName || 'Unknown Author'}
-                    </div>
-
-                    <div className='book-meta mb-3'>
-                      <i className='bi bi-calendar3 me-2'></i>
-                      {book.publicationYear || 'N/A'}
-                    </div>
-
-                    <div className='d-flex align-items-center flex-wrap gap-2 mb-2'>
-                      <span className='book-price'>
-                        ₹{finalPrice.toFixed(2)}
-                      </span>
-
-                      {hasDiscount && (
-                        <>
-                          <span className='old-price text-decoration-line-through'>
-                            ₹{originalPrice.toFixed(2)}
-                          </span>
-                          <span className='saving-text'>
-                            {discount.discountValue}% Off
-                          </span>
-                        </>
-                      )}
-                    </div>
-
-                    <div className='mt-auto pt-2'>
-                      <Button
-                        onClick={e => {
-                          e.stopPropagation()
-                          goToDetailPage(book._id)
-                        }}
-                        className='view-details-btn w-100'
-                      >
-                        <i className='bi bi-eye-fill me-2'></i>
-                        View Details
-                        <i className='bi bi-arrow-right ms-2'></i>
-                      </Button>
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-            )
-          })}
-        </Row>
-
-        {books.length === 0 && (
-          <div className='empty-books text-center mt-4'>
-            <i className='bi bi-book display-4 d-block mb-3'></i>
-            <h5 className='fw-bold text-dark'>No Books Available</h5>
-            <p className='mb-0'>
-              We are adding new books to our collection. Please check back soon.
+            <p className='text-secondary mt-3'>
+              Loading our book collection...
             </p>
           </div>
+        )}
+
+        {/* Error */}
+        {error && !loading && (
+          <div className='text-center py-5'>
+            <i className='bi bi-exclamation-circle text-danger display-4'></i>
+
+            <h5 className='fw-bold mt-3'>Unable to Load Books</h5>
+
+            <p className='text-secondary'>
+              Something went wrong. Please try again.
+            </p>
+
+            <Button variant='primary' onClick={fetchBooks}>
+              <i className='bi bi-arrow-clockwise me-2'></i>
+              Retry
+            </Button>
+          </div>
+        )}
+
+        {/* Book Grid */}
+        {!loading && !error && (
+          <>
+            {filteredBooks.length > 0 ? (
+              <Row className='g-3 g-lg-4 mt-1'>
+                {filteredBooks.map(book => {
+                  const discount = book.DiscountDetail?.[0]
+
+                  const discountValue = Number(discount?.discountValue) || 0
+
+                  const hasDiscount =
+                    discount?.status === 'Active' &&
+                    discountValue > 0 &&
+                    discountValue <= 100
+
+                  const originalPrice = Number(book.originalPrice) || 0
+
+                  const finalPrice = hasDiscount
+                    ? originalPrice - (originalPrice * discountValue) / 100
+                    : originalPrice
+
+                  const saving = originalPrice - finalPrice
+
+                  return (
+                    <Col key={book._id} xs={6} sm={6} md={4} xl={3}>
+                      <Card
+                        onClick={() => goToDetailPage(book._id)}
+                        className='book-card'
+                      >
+                        <div className='book-image-area'>
+                          {hasDiscount && (
+                            <span className='discount-badge'>
+                              {discountValue}% OFF
+                            </span>
+                          )}
+
+                          <img
+                            className='book-image'
+                            src={book.bookImage}
+                            alt={book.bookTittle || 'Book'}
+                            loading='lazy'
+                          />
+                        </div>
+
+                        <Card.Body className='d-flex flex-column p-3'>
+                          <div className='d-flex justify-content-between align-items-center flex-wrap gap-1 mb-2'>
+                            <span className='availability-badge'>
+                              <i className='bi bi-check-circle-fill me-1'></i>
+                              Available
+                            </span>
+
+                            <span
+                              className='text-warning'
+                              style={{ fontSize: '12px' }}
+                            >
+                              <i className='bi bi-star-fill me-1'></i>
+                              {book.rating || 'New'}
+                            </span>
+                          </div>
+
+                          <Card.Title className='book-title mb-2'>
+                            {book.bookTittle || 'Untitled Book'}
+                          </Card.Title>
+
+                          <div className='book-meta mb-2'>
+                            <i className='bi bi-person me-2'></i>
+                            {book.authorName || 'Unknown Author'}
+                          </div>
+
+                          <div className='book-meta mb-3'>
+                            <i className='bi bi-calendar3 me-2'></i>
+                            {book.publicationYear || 'N/A'}
+                          </div>
+
+                          <div className='d-flex align-items-center flex-wrap gap-2 mb-2'>
+                            <span className='book-price'>
+                              ₹{finalPrice.toFixed(2)}
+                            </span>
+
+                            {hasDiscount && (
+                              <>
+                                <span className='old-price text-decoration-line-through'>
+                                  ₹{originalPrice.toFixed(2)}
+                                </span>
+
+                                <span className='saving-text'>
+                                  Save ₹{saving.toFixed(2)}
+                                </span>
+                              </>
+                            )}
+                          </div>
+
+                          <div className='mt-auto pt-2'>
+                            <Button
+                              onClick={e => {
+                                e.stopPropagation()
+                                goToDetailPage(book._id)
+                              }}
+                              className='view-details-btn w-100'
+                            >
+                              <i className='bi bi-eye-fill me-2'></i>
+                              View Details
+                              <i className='bi bi-arrow-right ms-2'></i>
+                            </Button>
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  )
+                })}
+              </Row>
+            ) : (
+              <div className='empty-books text-center mt-4'>
+                <i className='bi bi-search display-4 d-block mb-3'></i>
+
+                <h5 className='fw-bold text-dark'>
+                  {searchBook.trim()
+                    ? 'No Matching Books Found'
+                    : 'No Books Available'}
+                </h5>
+
+                <p className='mb-3'>
+                  {searchBook.trim()
+                    ? 'Try another book title or author name.'
+                    : 'We are adding new books to our collection. Please check back soon.'}
+                </p>
+
+                {searchBook && (
+                  <Button
+                    variant='outline-primary'
+                    onClick={() => navigate('/', { replace: true })}
+                  >
+                    Clear Search
+                  </Button>
+                )}
+              </div>
+            )}
+          </>
         )}
       </Container>
     </>

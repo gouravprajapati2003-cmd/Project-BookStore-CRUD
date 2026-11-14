@@ -1,5 +1,6 @@
 const express = require('express')
 const UserController = require('../controllers/UserController')
+const PasswordResetController = require('../controllers/PasswordResetController')
 
 const {
   authMiddleware,
@@ -36,5 +37,20 @@ route.patch(
   superAdminMiddleware,
   (req, res) => UserController.updateAdminStatus(req, res)
 )
+
+route.post('/admin/password/forgot', (req, res) => {
+  req.passwordResetUserType = 'admin'
+  PasswordResetController.sendForgotPasswordOtp(req, res)
+})
+
+route.post('/admin/password/verify-otp', (req, res) => {
+  req.passwordResetUserType = 'admin'
+  PasswordResetController.verifyForgotPasswordOtp(req, res)
+})
+
+route.post('/admin/password/reset', (req, res) => {
+  req.passwordResetUserType = 'admin'
+  PasswordResetController.resetPassword(req, res)
+})
 
 module.exports = route

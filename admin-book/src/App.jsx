@@ -1,3 +1,5 @@
+import './utils/axiosInterceptor'
+import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 
 import Sidebar from './components/Sidebar'
@@ -36,7 +38,7 @@ function SuperAdminRoute ({ children }) {
   }
 
   if (!isSuperAdmin) {
-    return <Navigate to='/admin/dashboard' replace />
+    return <Navigate to='/dashboard' replace />
   }
 
   return children
@@ -59,8 +61,7 @@ function AdminLayout () {
 
         <main className='flex-grow-1 p-3 p-md-4' style={{ minWidth: 0 }}>
           <Routes>
-            <Route path='/admin/dashboard' element={<WelcomePage />} />
-
+            <Route path='/dashboard' element={<WelcomePage />} />
             {/* Book Management */}
             <Route path='/books' element={<BookList />} />
             <Route path='/add/book' element={<AddBook />} />
@@ -103,10 +104,8 @@ function AdminLayout () {
             <Route path='/transactions' element={<TransactionList />} />
 
             {/* Default Route */}
-            <Route
-              path='*'
-              element={<Navigate to='/admin/dashboard' replace />}
-            />
+            ;<Route path='*' element={<Navigate to='/dashboard' replace />} />
+
           </Routes>
         </main>
       </div>
@@ -116,14 +115,90 @@ function AdminLayout () {
 
 // Main App
 function App () {
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+
+    if (!token) return
+
+    const INACTIVITY_LIMIT = 30 * 60 * 1000
+    const MAX_SESSION_LIMIT = 12 * 60 * 60 * 1000
+
+    const loginTimeKey = 'adminLoginTime'
+
+    let loginTime = localStorage.getItem(loginTimeKey)
+
+    if (!loginTime) {
+      loginTime = Date.now()
+      localStorage.setItem(loginTimeKey, loginTime)
+    }
+
+    let inactivityTimer
+    let maxSessionTimer
+
+    const logout = () => {
+      localStorage.removeItem('token')
+      localStorage.removeItem('name')
+      localStorage.removeItem('email')
+      localStorage.removeItem('userType')
+      localStorage.removeItem('isSuperAdmin')
+      localStorage.removeItem(loginTimeKey)
+
+      window.location.replace('/')
+    }
+
+    const checkSession = () => {
+      const elapsed = Date.now() - Number(loginTime)
+
+      if (elapsed >= MAX_SESSION_LIMIT) {
+        logout()
+        return
+      }
+
+      clearTimeout(inactivityTimer)
+
+      inactivityTimer = setTimeout(logout, INACTIVITY_LIMIT)
+    }
+
+    const events = [
+      'mousemove',
+      'mousedown',
+      'keydown',
+      'scroll',
+      'touchstart',
+      'click'
+    ]
+
+    events.forEach(event => {
+      window.addEventListener(event, checkSession)
+    })
+
+    checkSession()
+
+    maxSessionTimer = setTimeout(
+      logout,
+      Math.max(0, MAX_SESSION_LIMIT - (Date.now() - Number(loginTime)))
+    )
+
+    return () => {
+      clearTimeout(inactivityTimer)
+      clearTimeout(maxSessionTimer)
+
+      events.forEach(event => {
+        window.removeEventListener(event, checkSession)
+      })
+    }
+  }, [])
+
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path='/' element={<AdminLogin />} />
-        <Route path='/*' element={<AdminLayout />} />
-      </Routes>
-    </BrowserRouter>
-  )
+  <BrowserRouter basename='/admin'>
+    <Routes>
+      <Route path='/' element={<AdminLogin />} />
+      <Route path='/*' element={<AdminLayout />} />
+    </Routes>
+  </BrowserRouter>
+)
+
 }
+
 
 export default App

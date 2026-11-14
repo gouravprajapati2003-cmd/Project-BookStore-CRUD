@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import { Navbar, Container, Nav, Dropdown, Image } from 'react-bootstrap'
-
 import { NavLink, useNavigate } from 'react-router-dom'
 
 import {
@@ -26,7 +25,11 @@ function AdminNavbar () {
     localStorage.removeItem('token')
     localStorage.removeItem('name')
     localStorage.removeItem('email')
-    navigate('/')
+    localStorage.removeItem('userType')
+    localStorage.removeItem('isSuperAdmin')
+    localStorage.removeItem('adminLoginTime')
+
+    navigate('/', { replace: true })
   }
 
   return (
@@ -44,10 +47,10 @@ function AdminNavbar () {
       }}
     >
       <Container fluid className='px-3 px-md-4'>
-        {/* GKP Brand */}
         <Navbar.Brand
           as={NavLink}
-          to='/admin/dashboard'
+          to='/dashboard'
+          end
           className='d-flex align-items-center gap-2'
           style={{ color: '#ffffff' }}
         >
@@ -64,7 +67,6 @@ function AdminNavbar () {
 
           <div className='d-flex flex-column'>
             <span className='fw-bold fs-4'>G.K.P. BookStore</span>
-
             <small
               style={{
                 fontSize: '12px',
@@ -80,11 +82,11 @@ function AdminNavbar () {
         <Navbar.Toggle aria-controls='admin-navbar' />
 
         <Navbar.Collapse id='admin-navbar' className='justify-content-end'>
-          {/* Home and Contact */}
           <Nav className='align-items-lg-center gap-lg-4 me-lg-4'>
             <Nav.Link
               as={NavLink}
-              to='/admin/dashboard'
+              to='/dashboard'
+              end
               className='d-flex align-items-center gap-2 fw-semibold'
               style={({ isActive }) => ({
                 color: isActive ? '#ffffff' : '#2563eb'
@@ -96,7 +98,7 @@ function AdminNavbar () {
 
             <Nav.Link
               as={NavLink}
-              to='/contact'
+              to='#'
               className='d-flex align-items-center gap-2 fw-semibold'
               style={({ isActive }) => ({
                 color: isActive ? '#ffffff' : '#2563eb'
@@ -107,7 +109,6 @@ function AdminNavbar () {
             </Nav.Link>
           </Nav>
 
-          {/* Admin Profile */}
           <Dropdown align='end' className='mt-3 mt-lg-0'>
             <Dropdown.Toggle
               variant='light'
@@ -124,7 +125,6 @@ function AdminNavbar () {
                 <span className='fw-semibold' style={{ fontSize: '14px' }}>
                   {username}
                 </span>
-
                 <small style={{ fontSize: '11px', color: '#64748b' }}>
                   Administrator
                 </small>
@@ -137,7 +137,7 @@ function AdminNavbar () {
               </Dropdown.Header>
 
               <Dropdown.Item
-                onClick={() => navigate('/profile')}
+                onClick={() => navigate('#')}
                 className='py-2'
               >
                 <FaUser className='me-2 text-secondary' />
@@ -145,7 +145,7 @@ function AdminNavbar () {
               </Dropdown.Item>
 
               <Dropdown.Item
-                onClick={() => navigate('/settings')}
+                onClick={() => navigate('#')}
                 className='py-2'
               >
                 <FaCog className='me-2 text-secondary' />

@@ -1,5 +1,14 @@
 import { useState } from 'react'
-import { Card, Form, Button, Row, Col, Spinner, Alert } from 'react-bootstrap'
+import {
+  Card,
+  Form,
+  Button,
+  Row,
+  Col,
+  Spinner,
+  Alert,
+  InputGroup
+} from 'react-bootstrap'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
@@ -14,6 +23,9 @@ function CreateAdmin () {
     password: '',
     confirmPassword: ''
   })
+
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState({
@@ -91,6 +103,9 @@ function CreateAdmin () {
           password: '',
           confirmPassword: ''
         })
+
+        setShowPassword(false)
+        setShowConfirmPassword(false)
       }
     } catch (err) {
       setMessage({
@@ -243,20 +258,35 @@ function CreateAdmin () {
                       Password
                     </Form.Label>
 
-                    <Form.Control
-                      type='password'
-                      name='password'
-                      placeholder='Minimum 8 characters'
-                      value={formData.password}
-                      onChange={handleChange}
-                      required
-                      minLength={8}
-                      autoComplete='new-password'
-                      style={{
-                        borderRadius: '9px',
-                        padding: '12px'
-                      }}
-                    />
+                    <InputGroup>
+                      <Form.Control
+                        type={showPassword ? 'text' : 'password'}
+                        name='password'
+                        placeholder='Minimum 8 characters'
+                        value={formData.password}
+                        onChange={handleChange}
+                        required
+                        minLength={8}
+                        autoComplete='new-password'
+                        style={{
+                          borderRadius: '9px',
+                          padding: '12px'
+                        }}
+                      />
+
+                      <Button
+                        variant='outline-secondary'
+                        type='button'
+                        onClick={() => setShowPassword(!showPassword)}
+                        title={showPassword ? 'Hide Password' : 'Show Password'}
+                      >
+                        <i
+                          className={`bi ${
+                            showPassword ? 'bi-eye-slash' : 'bi-eye'
+                          }`}
+                        ></i>
+                      </Button>
+                    </InputGroup>
                   </Form.Group>
                 </Col>
 
@@ -270,19 +300,40 @@ function CreateAdmin () {
                       Confirm Password
                     </Form.Label>
 
-                    <Form.Control
-                      type='password'
-                      name='confirmPassword'
-                      placeholder='Re-enter password'
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                      required
-                      autoComplete='new-password'
-                      style={{
-                        borderRadius: '9px',
-                        padding: '12px'
-                      }}
-                    />
+                    <InputGroup>
+                      <Form.Control
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        name='confirmPassword'
+                        placeholder='Re-enter password'
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        required
+                        autoComplete='new-password'
+                        style={{
+                          borderRadius: '9px',
+                          padding: '12px'
+                        }}
+                      />
+
+                      <Button
+                        variant='outline-secondary'
+                        type='button'
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                        title={
+                          showConfirmPassword
+                            ? 'Hide Password'
+                            : 'Show Password'
+                        }
+                      >
+                        <i
+                          className={`bi ${
+                            showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'
+                          }`}
+                        ></i>
+                      </Button>
+                    </InputGroup>
                   </Form.Group>
                 </Col>
               </Row>

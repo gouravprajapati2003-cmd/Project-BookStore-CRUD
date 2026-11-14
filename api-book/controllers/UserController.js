@@ -59,7 +59,7 @@ const doAdminLogin = async (req, res) => {
         userType: user.userType
       },
       process.env.JWT_SECRET,
-      { expiresIn: '3h' }
+      { expiresIn: '12h' }
     )
 
     user.lastLogin = new Date()

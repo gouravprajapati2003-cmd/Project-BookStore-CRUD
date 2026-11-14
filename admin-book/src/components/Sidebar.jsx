@@ -74,9 +74,9 @@ function Sidebar () {
         style={{ scrollbarWidth: 'thin' }}
       >
         <ListGroup variant='flush' className='gap-2'>
-          {menuItems.map((item, index) => (
+          {menuItems.map(item => (
             <ListGroup.Item
-              key={index}
+              key={item.path}
               as={NavLink}
               to={item.path}
               className='d-flex align-items-center gap-3 border-0 rounded-3 py-3 px-3'
@@ -89,7 +89,6 @@ function Sidebar () {
               })}
             >
               <i className={`bi ${item.icon}`} style={{ fontSize: '19px' }} />
-
               <span style={{ fontSize: '14px' }}>{item.title}</span>
             </ListGroup.Item>
           ))}
