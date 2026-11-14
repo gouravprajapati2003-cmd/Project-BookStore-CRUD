@@ -1,5 +1,5 @@
 const express = require('express')
-const PaymentController = require('../../controllers/user/PaymentController')
+const PaymentController = require('../../controllers/User/PaymentController')
 const router = express.Router()
 
 router.post('/create-order', (req, res) => {
