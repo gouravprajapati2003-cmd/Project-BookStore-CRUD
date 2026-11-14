@@ -1,8 +1,11 @@
 import { NavLink } from 'react-router-dom'
-import { ListGroup, Image } from 'react-bootstrap'
+import { ListGroup } from 'react-bootstrap'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap-icons/font/bootstrap-icons.css'
+
 function Sidebar () {
+  const isSuperAdmin = localStorage.getItem('isSuperAdmin') === 'true'
+
   const menuItems = [
     {
       title: 'Manage Book',
@@ -28,23 +31,31 @@ function Sidebar () {
       title: 'Manage Transaction',
       path: '/transactions',
       icon: 'bi-arrow-left-right'
-    }
+    },
+    ...(isSuperAdmin
+      ? [
+          {
+            title: 'Manage Admins',
+            path: '/admins',
+            icon: 'bi-shield-lock'
+          }
+        ]
+      : [])
   ]
 
   return (
     <div
-  className="d-flex flex-column"
-  style={{
-    width: '260px',
-    minWidth: '260px',
-    height: 'calc(100vh - 100px)',
-    position: 'sticky',
-    top: '100px',
-    background: '#172554',
-    boxShadow: '3px 0 15px rgba(0,0,0,0.08)'
-  }}
->
-      {/* Navigation Heading */}
+      className='d-flex flex-column'
+      style={{
+        width: '260px',
+        minWidth: '260px',
+        height: 'calc(100vh - 100px)',
+        position: 'sticky',
+        top: '100px',
+        background: '#172554',
+        boxShadow: '3px 0 15px rgba(0,0,0,0.08)'
+      }}
+    >
       <div className='px-4 pt-4 pb-3'>
         <small
           className='fw-semibold'
@@ -58,7 +69,6 @@ function Sidebar () {
         </small>
       </div>
 
-      {/* Sidebar Modules */}
       <div
         className='flex-grow-1 overflow-auto px-3'
         style={{ scrollbarWidth: 'thin' }}

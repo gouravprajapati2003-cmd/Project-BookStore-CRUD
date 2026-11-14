@@ -1,25 +1,42 @@
-const User = require('./models/User');
-const bcrypt = require('bcrypt');
-const createAdmin =  async () => {
-    try {
-        let user = await User.findOne({ email: 'admin@yopmail.com' });
-        if(user) {
-            //console.log('User Updated Successfully...');
-        } else {
-            user = new User();
-            user.firstName = 'Gourav';
-            user.lastName = 'Kumar';
-            user.mobileNo = '8171818132'
-            user.email = "admin@yopmail.com";
-            let password = bcrypt.hashSync('123456', 10);
-            user.password = password;
-            user.userType = 'admin';
-            await user.save();
-            //console.log("User Created Successfully...");
-        }
-    } catch (err) {
-        console.log(err);
+const User = require('./models/User')
+const bcrypt = require('bcrypt')
+
+const createAdmin = async () => {
+  try {
+    let user = await User.findOne({
+      email: 'admin@yopmail.com'
+    })
+
+    if (user) {
+      user.isSuperAdmin = true
+      user.userType = 'admin'
+      await user.save()
+
+      console.log('Super Admin updated successfully')
+    } else {
+      const hashedPassword = await bcrypt.hash(
+        process.env.ADMIN_INITIAL_PASSWORD,
+        10
+      )
+
+      user = new User({
+        firstName: 'Gourav',
+        lastName: 'Kumar',
+        mobileNo: '8171818132',
+        email: 'admin@yopmail.com',
+        password: hashedPassword,
+        userType: 'admin',
+        isSuperAdmin: true,
+        status: 'Active'
+      })
+
+      await user.save()
+
+      console.log('Super Admin created successfully')
     }
+  } catch (err) {
+    console.error('Create Super Admin Error:', err)
+  }
 }
 
-module.exports = createAdmin;
+module.exports = createAdmin

@@ -29,9 +29,14 @@ function UserList () {
   const [usersPerPage] = useState(5)
 
   useEffect(() => {
+    const token = localStorage.getItem('token')
+
     axios({
       url: apiUrl + '/users',
-      method: 'get'
+      method: 'get',
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
     })
       .then(res => {
         setUsers(res.data.data || [])
@@ -43,11 +48,21 @@ function UserList () {
 
   const toggleUserStatus = async (id, currentStatus) => {
     try {
+      const token = localStorage.getItem('token')
+
       const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active'
 
-      const res = await axios.put(`${apiUrl}/update/status/${id}`, {
-        status: newStatus
-      })
+      const res = await axios.put(
+        `${apiUrl}/update/status/${id}`,
+        {
+          status: newStatus
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      )
 
       if (res.status === 200) {
         setUsers(prevUsers =>

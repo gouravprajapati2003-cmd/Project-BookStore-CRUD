@@ -1,119 +1,271 @@
-import { useState } from "react";
-import { Container, Row, Col, Card, Form, Button, Spinner } from "react-bootstrap";
-import axios from "axios";
+import { useState } from 'react'
+import logo from '../../assets/logo.png'
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Form,
+  Button,
+  Spinner
+} from 'react-bootstrap'
+import axios from 'axios'
+
 const apiUrl = import.meta.env.VITE_API_URL
-// import { useNavigate } from "react-router-dom";
 
-function AdminLogin() {
-  // let navigate=useNavigate()
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showSpinner, setShowSpinner] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
+function AdminLogin () {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showSpinner, setShowSpinner] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
-  function validateEmail(email) {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-  }
+  async function handleLogin (e) {
+    e.preventDefault()
+    setErrorMsg('')
 
-  async function handleLogin(e) {
-    e.preventDefault();
-    setErrorMsg("");
-
-    // Basic validation
-    if (!email || !password) {
-      setErrorMsg("All fields are required.");
-      return;
+    if (!email.trim() || !password) {
+      setErrorMsg('Please enter email and password.')
+      return
     }
-    if (!validateEmail(email)) {
-      setErrorMsg("Please enter a valid email address.");
-      return;
+
+    if (!apiUrl) {
+      setErrorMsg('API URL is missing. Please check your .env file.')
+      return
     }
 
     try {
-      setShowSpinner(true);
-      let backendurl= apiUrl + '/admin/login'
-      const res = await axios.post(
-        backendurl, {
-        email,
-        password,
-      });
+      setShowSpinner(true)
+
+      const backendUrl = `${apiUrl.replace(/\/+$/, '')}/admin/login`
+
+      const res = await axios.post(backendUrl, {
+        email: email.trim().toLowerCase(),
+        password
+      })
 
       if (res.data.success) {
-        alert("Admin login successful!");
-        localStorage.setItem("token", res.data.data.token);
-        localStorage.setItem("name", res.data.data.firstName);
-        window.location.href = "/admin/dashboard"; // redirect
+        const admin = res.data.data
+
+        localStorage.setItem('token', admin.token)
+        localStorage.setItem('name', admin.name)
+        localStorage.setItem('email', admin.email)
+        localStorage.setItem('userType', admin.userType)
+        localStorage.setItem('isSuperAdmin', String(admin.isSuperAdmin))
+
+        window.location.href = '/admin/dashboard'
       } else {
-        setErrorMsg(res.data.message || "Invalid credentials");
+        setErrorMsg(res.data.message || 'Invalid credentials.')
       }
     } catch (err) {
-      setErrorMsg("Server error. Please try again.",err);
+      console.error('Admin Login Error:', err)
+
+      if (err.response) {
+        setErrorMsg(
+          err.response.data?.message ||
+            `Login failed. Status: ${err.response.status}`
+        )
+      } else if (err.request) {
+        setErrorMsg('Backend server is not responding. Please try again.')
+      } else {
+        setErrorMsg(err.message || 'Something went wrong.')
+      }
     } finally {
-      setShowSpinner(false);
+      setShowSpinner(false)
     }
   }
 
   return (
     <Container
       fluid
-      className="d-flex justify-content-center align-items-center vh-100"
+      className='min-vh-100 d-flex align-items-center justify-content-center py-4'
       style={{
-        background: "linear-gradient(135deg, #0d6efd, #20c997)",
+        background:
+          'radial-gradient(circle at top left, #254b76, transparent 40%), linear-gradient(135deg, #071526, #102d4a, #071526)'
       }}
     >
-      <Row className="w-100 justify-content-center">
-        <Col xs={10} sm={8} md={5} lg={4}>
-          <Card className="shadow-lg border-0">
-            <Card.Body className="p-4">
-              <h3 className="text-center text-primary mb-4 fw-bold">Admin Login</h3>
+      <Row className='w-100 justify-content-center align-items-center'>
+        <Col xs={11} sm={9} md={7} lg={5} xl={4}>
+          <Card
+            className='border-0 shadow-lg overflow-hidden'
+            style={{
+              borderRadius: '22px',
+              background: 'rgba(255,255,255,0.97)'
+            }}
+          >
+            <Card.Body className='p-4 p-md-5'>
+              {/* Logo and Branding */}
+              <div className='text-center mb-4'>
+                <div className='mb-3'>
+                  <img
+                    src={logo}
+                    alt='G.K.P BookStore Logo'
+                    style={{
+                      width: '85px',
+                      height: '85px',
+                      borderRadius: '50%',
+                      objectFit: 'cover',
+                      border: '3px solid #16b6a4',
+                      boxShadow: '0 5px 15px rgba(8,127,140,0.25)'
+                    }}
+                  />
+                </div>
 
+                <h3 className='fw-bold mb-1' style={{ color: '#142d4e' }}>
+                  G.K.P BookStore
+                </h3>
+
+                <p className='text-secondary mb-0'>Admin Control Panel</p>
+              </div>
+
+              <hr className='mb-4' />
+
+              <div className='mb-4'>
+                <h4 className='fw-bold mb-1' style={{ color: '#142d4e' }}>
+                  Welcome Back!
+                </h4>
+                <p className='text-secondary small mb-0'>
+                  Sign in to access your admin dashboard.
+                </p>
+              </div>
+
+              {/* Error Message */}
               {errorMsg && (
-                <div className="alert alert-danger py-2 text-center">{errorMsg}</div>
+                <div className='alert alert-danger py-2 small'>
+                  <i className='bi bi-exclamation-circle me-2'></i>
+                  {errorMsg}
+                </div>
               )}
 
               <Form onSubmit={handleLogin}>
-                <Form.Group className="mb-3" controlId="adminEmail">
-                  <Form.Label>Email</Form.Label>
-                  <Form.Control
-                    type="email"
-                    placeholder="Enter admin email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
+                {/* Email */}
+                <Form.Group className='mb-3'>
+                  <Form.Label className='fw-semibold'>Email Address</Form.Label>
+
+                  <div className='position-relative'>
+                    <i
+                      className='bi bi-envelope position-absolute'
+                      style={{
+                        left: '14px',
+                        top: '12px',
+                        color: '#718096'
+                      }}
+                    ></i>
+
+                    <Form.Control
+                      type='email'
+                      placeholder='Enter your email'
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      className='py-2 ps-5'
+                      autoComplete='username'
+                      required
+                      style={{ borderRadius: '10px' }}
+                    />
+                  </div>
                 </Form.Group>
 
-                <Form.Group className="mb-3" controlId="adminPassword">
-                  <Form.Label>Password</Form.Label>
-                  <Form.Control
-                    type="password"
-                    placeholder="Enter password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </Form.Group>
+                {/* Password */}
+                <Form.Group className='mb-4'>
+                  <Form.Label className='fw-semibold'>Password</Form.Label>
 
-                <div className="d-grid mt-3">
-                  <Button type="submit" variant="primary" disabled={showSpinner}>
+                  <div className='position-relative'>
+                    <i
+                      className='bi bi-lock position-absolute'
+                      style={{
+                        left: '14px',
+                        top: '12px',
+                        color: '#718096'
+                      }}
+                    ></i>
+
+                    <Form.Control
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder='Enter your password'
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      className='py-2 ps-5 pe-5'
+                      autoComplete='current-password'
+                      required
+                      style={{ borderRadius: '10px' }}
+                    />
+
+                    <i
+                      className={`bi ${
+                        showPassword ? 'bi-eye-slash' : 'bi-eye'
+                      } position-absolute`}
+                      role='button'
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{
+                        right: '14px',
+                        top: '12px',
+                        color: '#718096'
+                      }}
+                    ></i>
+                  </div>
+                </Form.Group>
+                {/* Forgot Password */}
+                <div className='d-flex justify-content-end mb-4'>
+                  <a
+                    href='#'
+                    onClick={e => {
+                      e.preventDefault()
+                      alert('Forgot Password feature coming soon!')
+                    }}
+                    className='text-decoration-none fw-semibold small'
+                    style={{ color: '#087f8c' }}
+                  >
+                    Forgot Password?
+                  </a>
+                </div>
+
+                {/* Login Button */}
+                <div className='d-grid'>
+                  <Button
+                    type='submit'
+                    disabled={showSpinner}
+                    className='py-2 fw-semibold border-0'
+                    style={{
+                      borderRadius: '10px',
+                      background: 'linear-gradient(135deg,#087f8c,#16b6a4)',
+                      boxShadow: '0 5px 15px rgba(8,127,140,0.25)'
+                    }}
+                  >
                     {showSpinner ? (
-                      <Spinner
-                        animation="border"
-                        size="sm"
-                        role="status"
-                        className="me-2"
-                      />
+                      <>
+                        <Spinner
+                          animation='border'
+                          size='sm'
+                          className='me-2'
+                        />
+                        Signing In...
+                      </>
                     ) : (
-                      "Login"
+                      <>
+                        <i className='bi bi-box-arrow-in-right me-2'></i>
+                        Sign In
+                      </>
                     )}
                   </Button>
                 </div>
               </Form>
+
+              <div className='text-center mt-4'>
+                <small className='text-secondary'>
+                  <i className='bi bi-shield-lock me-1'></i>
+                  Secure Admin Authentication
+                </small>
+              </div>
             </Card.Body>
           </Card>
+
+          <p className='text-center text-white-50 small mt-3'>
+            © {new Date().getFullYear()} G.K.P BookStore. All rights reserved.
+          </p>
         </Col>
       </Row>
     </Container>
-  );
+  )
 }
 
-export default AdminLogin;
+export default AdminLogin
