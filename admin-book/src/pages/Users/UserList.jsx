@@ -151,7 +151,7 @@ function UserList () {
 
                   <Form.Control
                     type='text'
-                    placeholder='Search users...'
+                    placeholder='Search Users...'
                     value={searchUser}
                     onChange={e => handleSearch(e.target.value)}
                     className='border-start-0 shadow-none'

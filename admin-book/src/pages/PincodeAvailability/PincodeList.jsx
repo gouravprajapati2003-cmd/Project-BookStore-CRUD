@@ -8,7 +8,9 @@ import {
   InputGroup,
   Form,
   Card,
-  Pagination
+  Pagination,
+  Spinner,
+  Alert
 } from 'react-bootstrap'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
@@ -18,7 +20,9 @@ import {
   FaSearch,
   FaEdit,
   FaCheckCircle,
-  FaTimesCircle
+  FaTimesCircle,
+  FaTruck,
+  FaList
 } from 'react-icons/fa'
 
 const apiUrl = import.meta.env.VITE_API_URL
@@ -30,22 +34,29 @@ function PincodeList () {
   const [searchPincode, setSearchPincode] = useState('')
   const [pageNo, setPageNo] = useState(1)
   const [pincodesPerPage] = useState(5)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   const goToAddPincode = () => {
     navigate('/add/pincode')
   }
 
+  const fetchPincodes = async () => {
+    try {
+      setLoading(true)
+      setError('')
+
+      const res = await axios.get(`${apiUrl}/pincodes`)
+      setPincodes(res.data.data || [])
+    } catch (err) {
+      setError(err.response?.data?.message || 'Unable to fetch pincodes')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
-    axios({
-      url: `${apiUrl}/pincodes`,
-      method: 'get'
-    })
-      .then(res => {
-        setPincodes(res.data.data || [])
-      })
-      .catch(err => {
-        alert(err.response?.data?.message || 'Unable to fetch pincodes')
-      })
+    fetchPincodes()
   }, [])
 
   const goForEdit = id => {
@@ -64,6 +75,9 @@ function PincodeList () {
     startIndex,
     startIndex + pincodesPerPage
   )
+
+  const availableCount = pincodes.filter(p => p.isAvailable).length
+  const unavailableCount = pincodes.length - availableCount
 
   const handleSearch = value => {
     setSearchPincode(value.replace(/\D/g, '').slice(0, 6))
@@ -84,31 +98,33 @@ function PincodeList () {
   return (
     <Container
       fluid
-      className='py-3 px-3 px-md-4'
-      style={{ background: '#f5f7fb', minHeight: '100vh' }}
+      className='p-3 p-md-4'
+      style={{ background: '#f5f7fb', minHeight: '100%' }}
     >
       <Card className='border-0 shadow-sm' style={{ borderRadius: '14px' }}>
         <Card.Body className='p-3 p-md-4'>
+          {/* Header */}
           <Row className='align-items-center mb-4 gy-3'>
             <Col md={6}>
               <div className='d-flex align-items-center gap-3'>
                 <div
-                  className='d-flex align-items-center justify-content-center'
+                  className='d-flex align-items-center justify-content-center flex-shrink-0'
                   style={{
-                    width: '46px',
-                    height: '46px',
+                    width: '48px',
+                    height: '48px',
                     borderRadius: '12px',
-                    background: '#dbeafe',
-                    color: '#1d4ed8'
+                    background: '#ccfbf1',
+                    color: '#0f766e'
                   }}
                 >
-                  <FaMapMarkerAlt size={21} />
+                  <FaMapMarkerAlt size={22} />
                 </div>
 
                 <div>
                   <h4 className='mb-1 fw-bold' style={{ color: '#172554' }}>
                     Manage Availability
                   </h4>
+
                   <small className='text-secondary'>
                     Manage book delivery pincodes and availability
                   </small>
@@ -118,14 +134,14 @@ function PincodeList () {
 
             <Col md={6}>
               <div className='d-flex align-items-center justify-content-md-end gap-2 flex-wrap'>
-                <InputGroup size='sm' style={{ maxWidth: '220px' }}>
+                <InputGroup style={{ maxWidth: '230px', minWidth: '160px' }}>
                   <InputGroup.Text className='bg-white border-end-0'>
                     <FaSearch className='text-secondary' />
                   </InputGroup.Text>
 
                   <Form.Control
                     type='text'
-                    placeholder='Search pincode...'
+                    placeholder='Search Pincode...'
                     value={searchPincode}
                     maxLength={6}
                     onChange={e => handleSearch(e.target.value)}
@@ -134,33 +150,125 @@ function PincodeList () {
                 </InputGroup>
 
                 <Button
-                  variant='primary'
-                  size='sm'
-                  className='d-flex align-items-center gap-2 px-3'
-                  style={{ background: '#2563eb', border: 'none' }}
+                  className='d-flex align-items-center justify-content-center gap-2 px-3 py-2 fw-semibold'
+                  style={{
+                    background: '#0f766e',
+                    border: 'none',
+                    minHeight: '42px',
+                    borderRadius: '8px'
+                  }}
                   onClick={goToAddPincode}
                 >
-                  <FaPlus size={11} />
+                  <FaPlus size={12} />
                   Add Pincode
                 </Button>
               </div>
             </Col>
           </Row>
 
-          <div className='d-flex justify-content-between align-items-center mb-3'>
-            <h6 className='fw-bold mb-0' style={{ color: '#334155' }}>
-              Pincode Collection
-            </h6>
+          {/* Summary Cards */}
+          <Row className='g-3 mb-4'>
+            <Col sm={6} lg={4}>
+              <Card
+                className='border-0 h-100'
+                style={{
+                  background: '#eff6ff',
+                  borderRadius: '11px'
+                }}
+              >
+                <Card.Body className='d-flex align-items-center justify-content-between p-3'>
+                  <div>
+                    <small className='text-secondary fw-semibold'>
+                      Total Pincodes
+                    </small>
+                    <h3
+                      className='fw-bold mb-0 mt-1'
+                      style={{ color: '#1d4ed8' }}
+                    >
+                      {pincodes.length}
+                    </h3>
+                  </div>
+
+                  <FaList size={25} style={{ color: '#2563eb' }} />
+                </Card.Body>
+              </Card>
+            </Col>
+
+            <Col sm={6} lg={4}>
+              <Card
+                className='border-0 h-100'
+                style={{
+                  background: '#ecfdf5',
+                  borderRadius: '11px'
+                }}
+              >
+                <Card.Body className='d-flex align-items-center justify-content-between p-3'>
+                  <div>
+                    <small className='text-secondary fw-semibold'>
+                      Available
+                    </small>
+                    <h3 className='fw-bold mb-0 mt-1 text-success'>
+                      {availableCount}
+                    </h3>
+                  </div>
+
+                  <FaCheckCircle size={25} className='text-success' />
+                </Card.Body>
+              </Card>
+            </Col>
+
+            <Col sm={6} lg={4}>
+              <Card
+                className='border-0 h-100'
+                style={{
+                  background: '#fef2f2',
+                  borderRadius: '11px'
+                }}
+              >
+                <Card.Body className='d-flex align-items-center justify-content-between p-3'>
+                  <div>
+                    <small className='text-secondary fw-semibold'>
+                      Not Available
+                    </small>
+                    <h3 className='fw-bold mb-0 mt-1 text-danger'>
+                      {unavailableCount}
+                    </h3>
+                  </div>
+
+                  <FaTimesCircle size={25} className='text-danger' />
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+
+          {/* Table Heading */}
+          <div className='d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2'>
+            <div>
+              <h6 className='fw-bold mb-1' style={{ color: '#334155' }}>
+                Pincode Collection
+              </h6>
+              <small className='text-secondary'>
+                Delivery availability records
+              </small>
+            </div>
 
             <small className='text-secondary'>
-              {filteredPincodes.length} pincodes found
+              {filteredPincodes.length} records found
             </small>
           </div>
 
-          <div className='table-responsive'>
+          {/* Error */}
+          {error && (
+            <Alert variant='danger' dismissible onClose={() => setError('')}>
+              {error}
+            </Alert>
+          )}
+
+          {/* Table */}
+          <div className='table-responsive' style={{ minHeight: '250px' }}>
             <Table hover className='align-middle mb-0'>
-              <thead style={{ background: '#f8fafc' }}>
-                <tr>
+              <thead>
+                <tr style={{ background: '#f8fafc' }}>
                   <th className='py-3 px-3 text-secondary small'>BOOK NAME</th>
                   <th className='py-3 text-secondary small'>PINCODE</th>
                   <th className='py-3 text-secondary small'>AVAILABILITY</th>
@@ -172,7 +280,16 @@ function PincodeList () {
               </thead>
 
               <tbody>
-                {currentPincodes.length > 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan='5' className='text-center py-5'>
+                      <Spinner animation='border' variant='success' />
+                      <p className='text-secondary mt-2 mb-0'>
+                        Loading pincodes...
+                      </p>
+                    </td>
+                  </tr>
+                ) : currentPincodes.length > 0 ? (
                   currentPincodes.map(p => (
                     <tr key={p._id}>
                       <td className='px-3'>
@@ -186,9 +303,9 @@ function PincodeList () {
 
                       <td>
                         <span
-                          className='fw-semibold'
+                          className='fw-bold'
                           style={{
-                            color: '#1d4ed8',
+                            color: '#0f766e',
                             letterSpacing: '1px'
                           }}
                         >
@@ -202,7 +319,8 @@ function PincodeList () {
                           style={{
                             background: p.isAvailable ? '#dcfce7' : '#fee2e2',
                             color: p.isAvailable ? '#15803d' : '#b91c1c',
-                            padding: '7px 11px'
+                            padding: '7px 11px',
+                            fontWeight: '600'
                           }}
                         >
                           {p.isAvailable ? (
@@ -210,6 +328,7 @@ function PincodeList () {
                           ) : (
                             <FaTimesCircle size={11} />
                           )}
+
                           {p.isAvailable ? 'Available' : 'Not Available'}
                         </span>
                       </td>
@@ -223,9 +342,14 @@ function PincodeList () {
                           <Button
                             variant='light'
                             size='sm'
-                            className='text-warning border'
                             title='Edit Pincode'
                             onClick={() => goForEdit(p._id)}
+                            style={{
+                              color: '#0f766e',
+                              border: '1px solid #99f6e4',
+                              background: '#f0fdfa',
+                              borderRadius: '7px'
+                            }}
                           >
                             <FaEdit />
                           </Button>
@@ -236,11 +360,17 @@ function PincodeList () {
                 ) : (
                   <tr>
                     <td colSpan='5' className='text-center py-5'>
-                      <FaMapMarkerAlt
-                        size={30}
-                        className='text-secondary mb-3'
-                      />
-                      <p className='text-secondary mb-0'>No Pincode Found</p>
+                      <FaTruck size={30} className='text-secondary mb-3' />
+
+                      <p className='fw-semibold text-secondary mb-1'>
+                        No Pincode Found
+                      </p>
+
+                      <small className='text-secondary'>
+                        {searchPincode
+                          ? 'Try searching with another pincode.'
+                          : 'Add a pincode to manage delivery availability.'}
+                      </small>
                     </td>
                   </tr>
                 )}
@@ -248,7 +378,8 @@ function PincodeList () {
             </Table>
           </div>
 
-          {totalPages > 0 && (
+          {/* Pagination */}
+          {!loading && totalPages > 0 && (
             <div className='d-flex justify-content-between align-items-center flex-wrap gap-3 mt-4'>
               <small className='text-secondary'>
                 Showing {startIndex + 1} to{' '}
@@ -259,31 +390,69 @@ function PincodeList () {
                 of {filteredPincodes.length} pincodes
               </small>
 
-              <Pagination size='sm' className='mb-0'>
-                <Pagination.Prev
-                  disabled={pageNo === 1}
-                  onClick={() => setPageNo(pageNo - 1)}
-                />
+              {totalPages > 1 && (
+                <Pagination size='sm' className='mb-0'>
+                  <Pagination.Prev
+                    disabled={pageNo === 1}
+                    onClick={() => setPageNo(pageNo - 1)}
+                  />
 
-                {Array.from({ length: totalPages }, (_, index) => (
-                  <Pagination.Item
-                    key={index + 1}
-                    active={pageNo === index + 1}
-                    onClick={() => setPageNo(index + 1)}
-                  >
-                    {index + 1}
-                  </Pagination.Item>
-                ))}
+                  {Array.from({ length: totalPages }, (_, index) => (
+                    <Pagination.Item
+                      key={index + 1}
+                      active={pageNo === index + 1}
+                      onClick={() => setPageNo(index + 1)}
+                    >
+                      {index + 1}
+                    </Pagination.Item>
+                  ))}
 
-                <Pagination.Next
-                  disabled={pageNo === totalPages}
-                  onClick={() => setPageNo(pageNo + 1)}
-                />
-              </Pagination>
+                  <Pagination.Next
+                    disabled={pageNo === totalPages}
+                    onClick={() => setPageNo(pageNo + 1)}
+                  />
+                </Pagination>
+              )}
             </div>
           )}
         </Card.Body>
       </Card>
+
+      <style>{`
+        .table thead th {
+          font-weight: 600;
+          white-space: nowrap;
+          border-bottom: 1px solid #e2e8f0;
+        }
+
+        .table tbody td {
+          padding-top: 14px;
+          padding-bottom: 14px;
+          border-color: #f1f5f9;
+        }
+
+        .table tbody tr:hover {
+          background-color: #f8fafc;
+        }
+
+        .pagination .page-link {
+          color: #0f766e;
+          border-radius: 6px;
+          margin: 0 2px;
+        }
+
+        .pagination .page-item.active .page-link {
+          background-color: #0f766e;
+          border-color: #0f766e;
+          color: white;
+        }
+
+        @media (max-width: 576px) {
+          .table {
+            min-width: 700px;
+          }
+        }
+      `}</style>
     </Container>
   )
 }

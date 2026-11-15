@@ -53,15 +53,16 @@ function AdminLayout () {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f5f7fa' }}>
+    <div className='admin-layout'>
       <AdminNavbar />
 
-      <div className='d-flex align-items-start'>
+      <div className='admin-content-layout'>
         <Sidebar />
 
-        <main className='flex-grow-1 p-3 p-md-4' style={{ minWidth: 0 }}>
+        <main className='admin-main-content'>
           <Routes>
             <Route path='/dashboard' element={<WelcomePage />} />
+
             {/* Book Management */}
             <Route path='/books' element={<BookList />} />
             <Route path='/add/book' element={<AddBook />} />
@@ -104,11 +105,82 @@ function AdminLayout () {
             <Route path='/transactions' element={<TransactionList />} />
 
             {/* Default Route */}
-            ;<Route path='*' element={<Navigate to='/dashboard' replace />} />
-
+            <Route path='*' element={<Navigate to='/dashboard' replace />} />
           </Routes>
         </main>
       </div>
+
+      <style>{`
+        * {
+          box-sizing: border-box;
+        }
+
+        .admin-layout {
+          height: 100vh;
+          width: 100%;
+          background: #f5f7fa;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .admin-content-layout {
+          display: flex;
+          flex: 1;
+          min-height: 0;
+          width: 100%;
+          overflow: hidden;
+          align-items: stretch;
+        }
+
+        .admin-main-content {
+          flex: 1;
+          min-width: 0;
+          height: 100%;
+          overflow-y: auto;
+          overflow-x: hidden;
+          padding: 24px;
+          box-sizing: border-box;
+          scrollbar-width: thin;
+        }
+
+        /* Tablet */
+        @media (min-width: 768px) and (max-width: 991px) {
+          .admin-main-content {
+            padding: 18px;
+          }
+        }
+
+        /* Mobile */
+        @media (max-width: 767px) {
+          .admin-layout {
+            height: 100vh;
+            overflow: hidden;
+          }
+
+          .admin-content-layout {
+            flex-direction: column;
+            align-items: stretch;
+            overflow: hidden;
+          }
+
+          .admin-main-content {
+            width: 100%;
+            max-width: 100%;
+            flex: 1;
+            min-height: 0;
+            padding: 12px;
+            overflow-y: auto;
+            overflow-x: hidden;
+          }
+        }
+
+        @media (max-width: 380px) {
+          .admin-main-content {
+            padding: 8px;
+          }
+        }
+      `}</style>
     </div>
   )
 }
@@ -190,15 +262,13 @@ function App () {
   }, [])
 
   return (
-  <BrowserRouter basename='/admin'>
-    <Routes>
-      <Route path='/' element={<AdminLogin />} />
-      <Route path='/*' element={<AdminLayout />} />
-    </Routes>
-  </BrowserRouter>
-)
-
+    <BrowserRouter basename='/admin'>
+      <Routes>
+        <Route path='/' element={<AdminLogin />} />
+        <Route path='/*' element={<AdminLayout />} />
+      </Routes>
+    </BrowserRouter>
+  )
 }
-
 
 export default App
