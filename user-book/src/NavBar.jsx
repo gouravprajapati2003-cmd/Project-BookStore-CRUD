@@ -1,7 +1,7 @@
 import Container from 'react-bootstrap/Container'
 import Nav from 'react-bootstrap/Nav'
 import Navbar from 'react-bootstrap/Navbar'
-import { Button, Form, Badge } from 'react-bootstrap'
+import { Button, Form, Badge, Dropdown } from 'react-bootstrap'
 import { useState, useEffect } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
 import Login from './Login'
@@ -31,7 +31,7 @@ function NavBar () {
     }
   }, [location.pathname])
 
-  // URL se Search Value Sync
+  // URL Search Sync
   useEffect(() => {
     const params = new URLSearchParams(location.search)
     setSearchBook(params.get('search') || '')
@@ -56,6 +56,7 @@ function NavBar () {
     setShowLoginModal(true)
   }
 
+  // Logout
   function handleLogout () {
     localStorage.removeItem('isLoggedIn')
     localStorage.removeItem('name')
@@ -71,6 +72,7 @@ function NavBar () {
     navigate('/cart')
   }
 
+  // Login Success
   function handleLoginSuccess () {
     setIsLoggedIn(true)
     setUserName(localStorage.getItem('name') || '')
@@ -85,6 +87,19 @@ function NavBar () {
     if (returnToCheckout) {
       navigate('/checkout', { replace: true })
     }
+  }
+
+  // Profile Navigation
+  function goToProfile () {
+    navigate('/profile')
+  }
+
+  function goToSettings () {
+    navigate('/settings')
+  }
+
+  function goToAdmin () {
+    navigate('/admin/')
   }
 
   return (
@@ -113,6 +128,41 @@ function NavBar () {
             height: 42px;
             border: none;
             box-shadow: none;
+          }
+
+          .profile-dropdown-toggle {
+            background: #ffffff !important;
+            color: #142D4E !important;
+            border: none !important;
+            border-radius: 8px !important;
+            padding: 8px 13px !important;
+            font-weight: 600 !important;
+          }
+
+          .profile-dropdown-toggle:hover,
+          .profile-dropdown-toggle:focus {
+            background: #e6f4f1 !important;
+            color: #0F766E !important;
+          }
+
+          .profile-menu {
+            min-width: 205px;
+            padding: 8px;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+          }
+
+          .profile-menu .dropdown-item {
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+          }
+
+          .profile-menu .dropdown-item:hover {
+            background: #e8f5f2;
+            color: #0F766E;
           }
 
           @media (max-width: 1199px) {
@@ -155,14 +205,14 @@ function NavBar () {
           <Navbar.Toggle aria-controls='navbar-content' className='bg-light' />
 
           <Navbar.Collapse id='navbar-content'>
-            {/* Navbar Live Search */}
+            {/* Search */}
             <Form
               className='d-flex my-3 my-xl-0 mx-xl-3 flex-grow-1 navbar-search'
               onSubmit={e => e.preventDefault()}
             >
               <div className='input-group'>
                 <Form.Control
-                  type='search'
+                  type='text'
                   placeholder='Search books, authors...'
                   value={searchBook}
                   onChange={handleSearch}
@@ -181,6 +231,7 @@ function NavBar () {
                       navigate('/', { replace: true })
                     }}
                     aria-label='Clear search'
+                    title='Clear Search'
                   >
                     <i className='bi bi-x-lg'></i>
                   </Button>
@@ -249,34 +300,66 @@ function NavBar () {
               </Nav.Link>
             </Nav>
 
-            {/* Login / Logout */}
-            <div className='d-flex align-items-center gap-2 ms-xl-3 my-3 my-xl-0'>
-              {isLoggedIn ? (
-                <>
-                  <span className='text-white fw-semibold'>
-                    <i className='bi bi-person-circle me-1'></i>
-                    Welcome, {userName}
-                  </span>
-
-                  <Button
-                    variant='danger'
-                    size='sm'
-                    className='fw-semibold px-3'
-                    onClick={handleLogout}
-                  >
-                    Logout
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  variant='success'
-                  className='fw-semibold px-4'
-                  onClick={goForLogin}
+            {/* Profile Dropdown */}
+            <div className='ms-xl-3 my-3 my-xl-0'>
+              <Dropdown align='end'>
+                <Dropdown.Toggle
+                  id='profile-dropdown'
+                  className='profile-dropdown-toggle'
                 >
-                  <i className='bi bi-person me-1'></i>
-                  Login
-                </Button>
-              )}
+                  <i className='bi bi-person-circle me-2 fs-5'></i>
+
+                  {isLoggedIn
+                    ? userName.split(' ')[0] || 'My Account'
+                    : 'My Account'}
+                </Dropdown.Toggle>
+
+                <Dropdown.Menu className='profile-menu'>
+                  <Dropdown.Header className='text-muted fw-semibold'>
+                    {isLoggedIn
+                      ? `Welcome, ${userName}`
+                      : 'Welcome to G.K.P BookStore'}
+                  </Dropdown.Header>
+
+                  <Dropdown.Divider />
+
+                  <Dropdown.Item onClick={goToProfile}>
+                    <i className='bi bi-person me-2'></i>
+                    My Profile
+                  </Dropdown.Item>
+
+                  <Dropdown.Item onClick={goToAdmin}>
+                    <i className='bi bi-speedometer2 me-2'></i>
+                    Admin Login
+                  </Dropdown.Item>
+
+                  <Dropdown.Item onClick={goToSettings}>
+                    <i className='bi bi-gear me-2'></i>
+                    Settings
+                  </Dropdown.Item>
+
+                  <Dropdown.Divider />
+
+                  {isLoggedIn ? (
+                    <Dropdown.Item
+                      onClick={handleLogout}
+                      className='text-danger'
+                    >
+                      <i className='bi bi-box-arrow-right me-2'></i>
+                      Logout
+                    </Dropdown.Item>
+                  ) : (
+                    <Dropdown.Item
+                      onClick={goForLogin}
+                      className='fw-semibold'
+                      style={{ color: '#0F766E' }}
+                    >
+                      <i className='bi bi-box-arrow-in-right me-2'></i>
+                      Login
+                    </Dropdown.Item>
+                  )}
+                </Dropdown.Menu>
+              </Dropdown>
             </div>
           </Navbar.Collapse>
         </Container>

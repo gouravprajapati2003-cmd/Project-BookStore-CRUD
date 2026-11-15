@@ -15,7 +15,7 @@ function Footer() {
       style={{
         backgroundColor: "#0F766E",
         color: "#F0FDFA",
-        marginTop: "40px"
+        marginTop: "0px"
       }}
     >
       <Container className="py-5">

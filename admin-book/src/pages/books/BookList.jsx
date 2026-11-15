@@ -9,7 +9,8 @@ import {
   Form,
   Pagination,
   InputGroup,
-  Card
+  Card,
+  Spinner
 } from 'react-bootstrap'
 import {
   FaTrash,
@@ -30,6 +31,7 @@ function BookList () {
   const [nop, setNop] = useState(1)
   const [booksPerPage] = useState(5)
   const [pageNo, setPageNo] = useState(1)
+  const [loading, setLoading] = useState(true)
 
   const navigate = useNavigate()
 
@@ -66,13 +68,15 @@ function BookList () {
   }
 
   useEffect(() => {
+    setLoading(true)
+
     axios({
       url: apiUrl + '/books',
       method: 'get',
       params: {
-        searchBook: searchBook,
-        pageNo: pageNo,
-        booksPerPage: booksPerPage
+        searchBook,
+        pageNo,
+        booksPerPage
       }
     })
       .then(res => {
@@ -82,6 +86,7 @@ function BookList () {
       .catch(err => {
         alert(err.response?.data?.message || 'Unable to fetch books')
       })
+      .finally(() => setLoading(false))
   }, [isDelete, searchBook, pageNo, booksPerPage])
 
   const handleSearch = value => {
@@ -106,31 +111,21 @@ function BookList () {
   return (
     <Container
       fluid
-      className='py-3 px-3 px-md-4'
+      className='book-list-container py-3 px-3 px-md-4'
       style={{ background: '#f5f7fb', minHeight: '100vh' }}
     >
-      <Card className='border-0 shadow-sm' style={{ borderRadius: '14px' }}>
+      <Card className='border-0 shadow-sm book-list-card'>
         <Card.Body className='p-3 p-md-4'>
+          {/* Header */}
           <Row className='align-items-center mb-4 gy-3'>
-            <Col md={6}>
+            <Col xs={12} lg={6}>
               <div className='d-flex align-items-center gap-3'>
-                <div
-                  className='d-flex align-items-center justify-content-center'
-                  style={{
-                    width: '46px',
-                    height: '46px',
-                    borderRadius: '12px',
-                    background: '#e0f2fe',
-                    color: '#0369a1'
-                  }}
-                >
+                <div className='book-heading-icon'>
                   <FaBook size={21} />
                 </div>
 
                 <div>
-                  <h4 className='mb-1 fw-bold' style={{ color: '#172554' }}>
-                    Manage Books
-                  </h4>
+                  <h4 className='mb-1 fw-bold book-heading'>Manage Books</h4>
                   <small className='text-secondary'>
                     View and manage your bookstore collection
                   </small>
@@ -138,12 +133,13 @@ function BookList () {
               </div>
             </Col>
 
-            <Col md={6}>
-              <div className='d-flex align-items-center justify-content-md-end gap-2 flex-wrap'>
-                <InputGroup size='sm' style={{ maxWidth: '240px' }}>
+            <Col xs={12} lg={6}>
+              <div className='book-header-actions'>
+                <InputGroup size='sm' className='book-search'>
                   <InputGroup.Text className='bg-white border-end-0'>
                     <FaSearch className='text-secondary' />
                   </InputGroup.Text>
+
                   <Form.Control
                     type='text'
                     placeholder='Search book title...'
@@ -156,8 +152,7 @@ function BookList () {
                 <Button
                   variant='primary'
                   size='sm'
-                  className='d-flex align-items-center gap-2 px-3'
-                  style={{ background: '#2563eb', border: 'none' }}
+                  className='d-flex align-items-center justify-content-center gap-2 px-3 add-book-btn'
                   onClick={goToAddBook}
                 >
                   <FaPlus size={11} />
@@ -167,51 +162,56 @@ function BookList () {
             </Col>
           </Row>
 
-          <div className='d-flex justify-content-between align-items-center mb-3'>
+          {/* Table Heading */}
+          <div className='d-flex justify-content-between align-items-center mb-3 gap-2'>
             <h6 className='fw-bold mb-0' style={{ color: '#334155' }}>
               Book Collection
             </h6>
-            <small className='text-secondary'>
+
+            <small className='text-secondary text-nowrap'>
               {books.length} books on this page
             </small>
           </div>
 
-          <div className='table-responsive'>
-            <Table hover className='align-middle mb-0'>
-              <thead style={{ background: '#f8fafc' }}>
+          {/* Table */}
+          <div className='table-responsive book-table-wrapper'>
+            <Table hover className='align-middle mb-0 book-table'>
+              <thead>
                 <tr>
-                  <th className='py-3 px-3 text-secondary small'>BOOK</th>
-                  <th className='py-3 text-secondary small'>AUTHOR</th>
-                  <th className='py-3 text-secondary small'>PRICE</th>
-                  <th className='py-3 text-secondary small'>ISBN NO.</th>
-                  <th className='py-3 text-secondary small'>PUBLICATION</th>
-                  <th className='py-3 text-center text-secondary small'>
-                    ACTIONS
-                  </th>
+                  <th className='py-3 px-3'>BOOK</th>
+                  <th className='py-3'>AUTHOR</th>
+                  <th className='py-3'>PRICE</th>
+                  <th className='py-3'>ISBN NO.</th>
+                  <th className='py-3'>PUBLICATION</th>
+                  <th className='py-3 text-center'>ACTIONS</th>
                 </tr>
               </thead>
 
               <tbody>
-                {books.length > 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan='6' className='text-center py-5'>
+                      <Spinner animation='border' variant='primary' />
+                      <p className='text-secondary mt-2 mb-0'>
+                        Loading books...
+                      </p>
+                    </td>
+                  </tr>
+                ) : books.length > 0 ? (
                   books.map(book => (
                     <tr key={book._id}>
                       <td className='px-3'>
-                        <div className='d-flex align-items-center gap-3'>
+                        <div className='d-flex align-items-center gap-3 book-info'>
                           <img
                             src={book.bookImage}
                             alt={book.bookTittle}
-                            style={{
-                              width: '48px',
-                              height: '58px',
-                              objectFit: 'cover',
-                              borderRadius: '6px',
-                              background: '#f1f5f9'
+                            onError={e => {
+                              e.currentTarget.style.display = 'none'
                             }}
+                            className='book-image'
                           />
-                          <span
-                            className='fw-semibold'
-                            style={{ color: '#1e293b' }}
-                          >
+
+                          <span className='fw-semibold book-title'>
                             {book.bookTittle}
                           </span>
                         </div>
@@ -230,7 +230,7 @@ function BookList () {
                       <td className='text-secondary'>{book.publicationYear}</td>
 
                       <td>
-                        <div className='d-flex justify-content-center gap-2'>
+                        <div className='d-flex justify-content-center gap-2 book-actions'>
                           <Button
                             variant='light'
                             size='sm'
@@ -276,14 +276,17 @@ function BookList () {
             </Table>
           </div>
 
+          {/* Pagination */}
           {nop > 1 && (
-            <div className='d-flex justify-content-center mt-4'>
+            <div className='d-flex justify-content-center mt-4 book-pagination'>
               <Pagination size='sm' className='mb-0'>
                 <Pagination.Prev
                   disabled={pageNo === 1}
                   onClick={() => setPageNo(prev => prev - 1)}
                 />
+
                 {items}
+
                 <Pagination.Next
                   disabled={pageNo === nop}
                   onClick={() => setPageNo(prev => prev + 1)}
@@ -293,6 +296,169 @@ function BookList () {
           )}
         </Card.Body>
       </Card>
+
+      {/* Responsive Styling */}
+      <style>{`
+        .book-list-card {
+          border-radius: 14px;
+        }
+
+        .book-heading {
+          color: #172554;
+        }
+
+        .book-heading-icon {
+          width: 46px;
+          height: 46px;
+          min-width: 46px;
+          border-radius: 12px;
+          background: #e0f2fe;
+          color: #0369a1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .book-header-actions {
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          gap: 10px;
+        }
+
+        .book-search {
+          max-width: 240px;
+          width: 100%;
+        }
+
+        .add-book-btn {
+          background: #2563eb;
+          border: none;
+          white-space: nowrap;
+          min-height: 32px;
+        }
+
+        .book-table {
+          min-width: 850px;
+        }
+
+        .book-table thead th {
+          background: #f8fafc;
+          color: #64748b;
+          font-size: 12px;
+          font-weight: 600;
+          white-space: nowrap;
+        }
+
+        .book-image {
+          width: 48px;
+          height: 58px;
+          min-width: 48px;
+          object-fit: cover;
+          border-radius: 6px;
+          background: #f1f5f9;
+        }
+
+        .book-title {
+          color: #1e293b;
+          min-width: 130px;
+        }
+
+        .book-actions button {
+          min-width: 32px;
+        }
+
+        /* Tablet */
+        @media (min-width: 768px) and (max-width: 991px) {
+          .book-header-actions {
+            justify-content: flex-start;
+          }
+
+          .book-search {
+            max-width: 280px;
+          }
+
+          .book-list-container {
+            padding-left: 16px !important;
+            padding-right: 16px !important;
+          }
+        }
+
+        /* Mobile */
+        @media (max-width: 767px) {
+          .book-list-container {
+            padding: 12px !important;
+          }
+
+          .book-list-card {
+            border-radius: 10px;
+          }
+
+          .book-list-card .card-body {
+            padding: 15px !important;
+          }
+
+          .book-heading-icon {
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+          }
+
+          .book-heading {
+            font-size: 19px;
+          }
+
+          .book-header-actions {
+            width: 100%;
+            flex-direction: column;
+            align-items: stretch;
+          }
+
+          .book-search {
+            max-width: 100%;
+          }
+
+          .add-book-btn {
+            width: 100%;
+            min-height: 36px;
+          }
+
+          .book-table {
+            min-width: 800px;
+          }
+
+          .book-image {
+            width: 40px;
+            height: 50px;
+            min-width: 40px;
+          }
+
+          .book-title {
+            font-size: 13px;
+          }
+
+          .book-pagination {
+            overflow-x: auto;
+            justify-content: flex-start !important;
+          }
+
+          .book-pagination .pagination {
+            flex-wrap: nowrap;
+            margin: auto;
+          }
+        }
+
+        /* Small Mobile */
+        @media (max-width: 380px) {
+          .book-heading {
+            font-size: 17px;
+          }
+
+          .book-list-card .card-body {
+            padding: 12px !important;
+          }
+        }
+      `}</style>
     </Container>
   )
 }

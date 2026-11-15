@@ -33,139 +33,264 @@ function AdminNavbar () {
   }
 
   return (
-    <Navbar
-      expand='lg'
-      className='py-2'
-      style={{
-        background: '#172554',
-        boxShadow: '0 3px 12px rgba(0,0,0,0.07)',
-        minHeight: '100px',
-        position: 'sticky',
-        top: 0,
-        width: '100%',
-        zIndex: 1020
-      }}
-    >
-      <Container fluid className='px-3 px-md-4'>
-        <Navbar.Brand
-          as={NavLink}
-          to='/dashboard'
-          end
-          className='d-flex align-items-center gap-2'
-          style={{ color: '#ffffff' }}
-        >
-          <Image
-            src={logo}
-            width='52'
-            height='52'
-            roundedCircle
-            style={{
-              objectFit: 'cover',
-              border: '2px solid #dbeafe'
-            }}
-          />
+    <>
+      <style>
+        {`
+          .admin-navbar {
+            background: #172554;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.07);
+            min-height: 100px;
+            position: sticky;
+            top: 0;
+            width: 100%;
+            z-index: 1020;
+          }
 
-          <div className='d-flex flex-column'>
-            <span className='fw-bold fs-4'>G.K.P. BookStore</span>
-            <small
+          .admin-brand {
+            color: #ffffff !important;
+            min-width: 0;
+          }
+
+          .admin-brand-title {
+            font-size: 24px;
+            white-space: nowrap;
+          }
+
+          .admin-brand-subtitle {
+            font-size: 12px;
+            color: #94a3b8;
+            letter-spacing: 1px;
+          }
+
+          .admin-navbar .navbar-toggler {
+            border: 1px solid #94a3b8;
+            padding: 6px 10px;
+          }
+
+          .admin-navbar .navbar-toggler:focus {
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.15);
+          }
+
+          .admin-nav-link {
+            color: #bfdbfe !important;
+            transition: color 0.2s ease;
+          }
+
+          .admin-nav-link:hover,
+          .admin-nav-link.active {
+            color: #ffffff !important;
+          }
+
+          .admin-profile-toggle {
+            background: #f1f5f9 !important;
+            border: 1px solid #dbe2ea !important;
+            color: #172554 !important;
+          }
+
+          .admin-profile-menu {
+            min-width: 210px;
+          }
+
+          /* Tablet */
+          @media (min-width: 768px) and (max-width: 991px) {
+            .admin-navbar {
+              min-height: 85px;
+            }
+
+            .admin-brand img {
+              width: 45px !important;
+              height: 45px !important;
+            }
+
+            .admin-brand-title {
+              font-size: 21px;
+            }
+
+            .admin-brand-subtitle {
+              font-size: 10px;
+            }
+
+            .admin-navbar-collapse {
+              padding-top: 15px;
+              border-top: 1px solid rgba(255,255,255,0.12);
+              margin-top: 12px;
+            }
+          }
+
+          /* Mobile */
+          @media (max-width: 767px) {
+            .admin-navbar {
+              min-height: 75px;
+            }
+
+            .admin-navbar .container-fluid {
+              padding-left: 12px !important;
+              padding-right: 12px !important;
+            }
+
+            .admin-brand {
+              gap: 8px !important;
+            }
+
+            .admin-brand img {
+              width: 42px !important;
+              height: 42px !important;
+            }
+
+            .admin-brand-title {
+              font-size: 18px;
+            }
+
+            .admin-brand-subtitle {
+              font-size: 9px;
+              letter-spacing: 0.7px;
+            }
+
+            .admin-navbar-collapse {
+              padding: 15px 5px 8px;
+              margin-top: 12px;
+              border-top: 1px solid rgba(255,255,255,0.15);
+            }
+
+            .admin-navbar-links {
+              align-items: stretch !important;
+              gap: 5px !important;
+            }
+
+            .admin-nav-link {
+              padding: 10px 8px !important;
+              border-radius: 7px;
+            }
+
+            .admin-nav-link:hover {
+              background: rgba(255,255,255,0.08);
+            }
+
+            .admin-profile-dropdown {
+              width: 100%;
+              margin-top: 12px;
+            }
+
+            .admin-profile-toggle {
+              width: 100%;
+              justify-content: flex-start;
+              border-radius: 10px !important;
+            }
+
+            .admin-profile-menu {
+              width: 100%;
+            }
+          }
+        `}
+      </style>
+
+      <Navbar expand='lg' className='admin-navbar py-2'>
+        <Container fluid className='px-3 px-md-4'>
+          {/* Logo */}
+          <Navbar.Brand
+            as={NavLink}
+            to='/dashboard'
+            end
+            className='admin-brand d-flex align-items-center gap-2 me-2'
+          >
+            <Image
+              src={logo}
+              width='52'
+              height='52'
+              roundedCircle
               style={{
-                fontSize: '12px',
-                color: '#64748b',
-                letterSpacing: '1px'
+                objectFit: 'cover',
+                border: '2px solid #dbeafe',
+                flexShrink: 0
               }}
-            >
-              ADMIN DASHBOARD
-            </small>
-          </div>
-        </Navbar.Brand>
+            />
 
-        <Navbar.Toggle aria-controls='admin-navbar' />
+            <div className='d-flex flex-column'>
+              <span className='fw-bold admin-brand-title'>
+                G.K.P. BookStore
+              </span>
 
-        <Navbar.Collapse id='admin-navbar' className='justify-content-end'>
-          <Nav className='align-items-lg-center gap-lg-4 me-lg-4'>
-            <Nav.Link
-              as={NavLink}
-              to='/dashboard'
-              end
-              className='d-flex align-items-center gap-2 fw-semibold'
-              style={({ isActive }) => ({
-                color: isActive ? '#ffffff' : '#2563eb'
-              })}
-            >
-              <FaHome size={19} />
-              Home
-            </Nav.Link>
+              <small className='admin-brand-subtitle'>ADMIN DASHBOARD</small>
+            </div>
+          </Navbar.Brand>
 
-            <Nav.Link
-              as={NavLink}
-              to='#'
-              className='d-flex align-items-center gap-2 fw-semibold'
-              style={({ isActive }) => ({
-                color: isActive ? '#ffffff' : '#2563eb'
-              })}
-            >
-              <FaEnvelope size={19} />
-              Contact
-            </Nav.Link>
-          </Nav>
+          {/* Mobile Toggle */}
+          <Navbar.Toggle aria-controls='admin-navbar' className='bg-light' />
 
-          <Dropdown align='end' className='mt-3 mt-lg-0'>
-            <Dropdown.Toggle
-              variant='light'
-              className='d-flex align-items-center gap-2 rounded-pill px-3 py-2'
-              style={{
-                background: '#f1f5f9',
-                border: '1px solid #dbe2ea',
-                color: '#172554'
-              }}
-            >
-              <FaUserCircle size={30} />
-
-              <div className='d-flex flex-column text-start'>
-                <span className='fw-semibold' style={{ fontSize: '14px' }}>
-                  {username}
-                </span>
-                <small style={{ fontSize: '11px', color: '#64748b' }}>
-                  Administrator
-                </small>
-              </div>
-            </Dropdown.Toggle>
-
-            <Dropdown.Menu className='border-0 shadow rounded-3 mt-2 p-2'>
-              <Dropdown.Header className='text-primary fw-bold'>
-                Account Settings
-              </Dropdown.Header>
-
-              <Dropdown.Item
-                onClick={() => navigate('#')}
-                className='py-2'
+          <Navbar.Collapse
+            id='admin-navbar'
+            className='justify-content-end admin-navbar-collapse'
+          >
+            {/* Navigation */}
+            <Nav className='align-items-lg-center gap-lg-4 me-lg-4 admin-navbar-links'>
+              <Nav.Link
+                as={NavLink}
+                to='/dashboard'
+                end
+                className='d-flex align-items-center gap-2 fw-semibold admin-nav-link'
               >
-                <FaUser className='me-2 text-secondary' />
-                My Profile
-              </Dropdown.Item>
+                <FaHome size={19} />
+                Home
+              </Nav.Link>
 
-              <Dropdown.Item
-                onClick={() => navigate('#')}
-                className='py-2'
+              <Nav.Link
+                href='#'
+                className='d-flex align-items-center gap-2 fw-semibold admin-nav-link'
               >
-                <FaCog className='me-2 text-secondary' />
-                Settings
-              </Dropdown.Item>
+                <FaEnvelope size={19} />
+                Contact
+              </Nav.Link>
+            </Nav>
 
-              <Dropdown.Divider />
-
-              <Dropdown.Item
-                onClick={handleLogout}
-                className='py-2 text-danger fw-semibold'
+            {/* Profile Dropdown */}
+            <Dropdown align='end' className='admin-profile-dropdown'>
+              <Dropdown.Toggle
+                variant='light'
+                className='d-flex align-items-center gap-2 rounded-pill px-3 py-2 admin-profile-toggle'
               >
-                <FaSignOutAlt className='me-2' />
-                Logout
-              </Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown>
-        </Navbar.Collapse>
-      </Container>
-    </Navbar>
+                <FaUserCircle size={30} />
+
+                <div className='d-flex flex-column text-start'>
+                  <span className='fw-semibold' style={{ fontSize: '14px' }}>
+                    {username}
+                  </span>
+
+                  <small style={{ fontSize: '11px', color: '#64748b' }}>
+                    Administrator
+                  </small>
+                </div>
+              </Dropdown.Toggle>
+
+              <Dropdown.Menu className='admin-profile-menu border-0 shadow rounded-3 mt-2 p-2'>
+                <Dropdown.Header className='text-primary fw-bold'>
+                  Account Settings
+                </Dropdown.Header>
+
+                <Dropdown.Item onClick={() => navigate('#')} className='py-2'>
+                  <FaUser className='me-2 text-secondary' />
+                  My Profile
+                </Dropdown.Item>
+
+                <Dropdown.Item onClick={() => navigate('#')} className='py-2'>
+                  <FaCog className='me-2 text-secondary' />
+                  Settings
+                </Dropdown.Item>
+
+                <Dropdown.Divider />
+
+                <Dropdown.Item
+                  onClick={handleLogout}
+                  className='py-2 text-danger fw-semibold'
+                >
+                  <FaSignOutAlt className='me-2' />
+                  Logout
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
+          </Navbar.Collapse>
+        </Container>
+      </Navbar>
+    </>
   )
 }
 

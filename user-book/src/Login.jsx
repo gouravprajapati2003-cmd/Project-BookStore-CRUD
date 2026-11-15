@@ -347,12 +347,41 @@ function Login ({ show, onHide, onLoginSuccess }) {
     >
       <div style={{ borderRadius: '14px', overflow: 'hidden' }}>
         {/* HEADER */}
+        {/* CLOSE BUTTON */}
+        <button
+          type='button'
+          onClick={handleClose}
+          disabled={loading}
+          aria-label='Close'
+          title='Close'
+          style={{
+            position: 'absolute',
+            top: '12px',
+            right: '15px',
+            width: '34px',
+            height: '34px',
+            borderRadius: '50%',
+            border: '1px solid rgba(255,255,255,0.5)',
+            background: 'rgba(255,255,255,0.15)',
+            color: '#fff',
+            fontSize: '23px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            zIndex: 10
+          }}
+        >
+          &times;
+        </button>
+
         <div
           style={{
             background: 'linear-gradient(135deg, #142D4E, #24527D)',
             color: '#fff',
             padding: '25px 24px',
-            textAlign: 'center'
+            textAlign: 'center',
+            position: 'relative'
           }}
         >
           <div

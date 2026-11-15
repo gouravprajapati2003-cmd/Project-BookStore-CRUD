@@ -44,57 +44,161 @@ function Sidebar () {
   ]
 
   return (
-    <div
-      className='d-flex flex-column'
-      style={{
-        width: '260px',
-        minWidth: '260px',
-        height: 'calc(100vh - 100px)',
-        position: 'sticky',
-        top: '100px',
-        background: '#172554',
-        boxShadow: '3px 0 15px rgba(0,0,0,0.08)'
-      }}
-    >
-      <div className='px-4 pt-4 pb-3'>
-        <small
-          className='fw-semibold'
-          style={{
-            color: '#94a3b8',
-            letterSpacing: '1.2px',
-            fontSize: '11px'
-          }}
-        >
-          MAIN MENU
-        </small>
-      </div>
+    <>
+      <style>
+        {`
+          .admin-sidebar {
+            width: 260px;
+            min-width: 260px;
+            height: calc(100vh - 100px);
+            position: sticky;
+            top: 100px;
+            background: #172554;
+            box-shadow: 3px 0 15px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+          }
 
-      <div
-        className='flex-grow-1 overflow-auto px-3'
-        style={{ scrollbarWidth: 'thin' }}
-      >
-        <ListGroup variant='flush' className='gap-2'>
-          {menuItems.map(item => (
-            <ListGroup.Item
-              key={item.path}
-              as={NavLink}
-              to={item.path}
-              className='d-flex align-items-center gap-3 border-0 rounded-3 py-3 px-3'
-              style={({ isActive }) => ({
-                background: isActive ? '#2563eb' : 'transparent',
-                color: isActive ? '#ffffff' : '#cbd5e1',
-                fontWeight: isActive ? '600' : '500',
-                transition: 'all 0.2s ease',
-                textDecoration: 'none'
-              })}
-            >
-              <i className={`bi ${item.icon}`} style={{ fontSize: '19px' }} />
-              <span style={{ fontSize: '14px' }}>{item.title}</span>
-            </ListGroup.Item>
-          ))}
-        </ListGroup>
+          .sidebar-menu {
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: thin;
+          }
+
+          .sidebar-link {
+            display: flex !important;
+            align-items: center;
+            gap: 12px;
+            border: 0 !important;
+            border-radius: 10px !important;
+            padding: 13px 12px !important;
+            color: #cbd5e1;
+            background: transparent;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+          }
+
+          .sidebar-link:hover {
+            background: rgba(255,255,255,0.09);
+            color: #ffffff;
+          }
+
+          .sidebar-link.active {
+            background: #2563eb !important;
+            color: #ffffff !important;
+            font-weight: 600;
+          }
+
+          .sidebar-link i {
+            font-size: 19px;
+            flex-shrink: 0;
+          }
+
+          /* Tablet */
+          @media (min-width: 768px) and (max-width: 991px) {
+            .admin-sidebar {
+              width: 220px;
+              min-width: 220px;
+            }
+
+            .sidebar-menu {
+              padding-left: 10px !important;
+              padding-right: 10px !important;
+            }
+
+            .sidebar-link {
+              gap: 9px;
+              padding: 12px 10px !important;
+              font-size: 13px;
+            }
+
+            .sidebar-link i {
+              font-size: 17px;
+            }
+          }
+
+          /* Mobile */
+          @media (max-width: 767px) {
+            .admin-sidebar {
+              width: 100%;
+              min-width: 0;
+              height: auto;
+              position: relative;
+              top: 0;
+              display: block;
+              box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+            }
+
+            .sidebar-heading {
+              padding: 10px 14px 5px !important;
+            }
+
+            .sidebar-menu {
+              overflow-x: auto;
+              overflow-y: hidden;
+              padding: 5px 10px 12px !important;
+            }
+
+            .sidebar-list {
+              display: flex;
+              flex-direction: row;
+              flex-wrap: nowrap;
+              gap: 8px !important;
+              width: max-content;
+            }
+
+            .sidebar-link {
+              width: auto;
+              padding: 10px 13px !important;
+              gap: 8px;
+              font-size: 13px;
+              border-radius: 8px !important;
+            }
+
+            .sidebar-link i {
+              font-size: 16px;
+            }
+          }
+        `}
+      </style>
+
+      <div className='admin-sidebar'>
+        {/* Sidebar Heading */}
+        <div className='px-4 pt-4 pb-3 sidebar-heading'>
+          <small
+            className='fw-semibold'
+            style={{
+              color: '#94a3b8',
+              letterSpacing: '1.2px',
+              fontSize: '11px'
+            }}
+          >
+            MAIN MENU
+          </small>
+        </div>
+
+        {/* Menu Items */}
+        <div className='flex-grow-1 sidebar-menu px-3'>
+          <ListGroup variant='flush' className='sidebar-list'>
+            {menuItems.map(item => (
+              <ListGroup.Item
+                key={item.path}
+                as={NavLink}
+                to={item.path}
+                end
+                className='sidebar-link'
+              >
+                <i className={`bi ${item.icon}`} />
+                <span>{item.title}</span>
+              </ListGroup.Item>
+            ))}
+          </ListGroup>
+        </div>
       </div>
-    </div>
+    </>
   )
 }
 
