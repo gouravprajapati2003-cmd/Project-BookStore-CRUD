@@ -98,9 +98,10 @@ function NavBar () {
     navigate('/settings')
   }
 
-  function goToAdmin () {
-    navigate('/admin/')
-  }
+  const goToAdmin = () => {
+  window.location.href = '/admin/'
+}
+
 
   return (
     <>
@@ -260,7 +261,7 @@ function NavBar () {
               </Nav.Link>
 
               <Nav.Link
-                href='/#contact'
+                href='#contact'
                 className='text-white fw-semibold px-2'
               >
                 <i className='bi bi-telephone me-1'></i>
