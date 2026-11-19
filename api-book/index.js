@@ -13,6 +13,7 @@ const frontUser = require('./routes/User/user')
 const pincode = require('./routes/PincodeRoutes')
 const payment = require('./routes/User/Payment')
 const transaction = require('./routes/PaymentRoutes')
+const review = require('./routes/user/ReviewRoutes')
 
 const app = express()
 
@@ -27,6 +28,7 @@ app.use(User)
 app.use(pincode)
 app.use(payment)
 app.use(transaction)
+app.use(review)
 
 const startServer = async () => {
   try {

@@ -27,6 +27,7 @@ import TransactionList from './pages/Transaction/TransactionList'
 
 import CreateAdmin from './pages/Admins/CreateAdmin'
 import AdminList from './pages/Admins/AdminList'
+import ReviewList from './pages/Reviews/ReviewList'
 
 // Super Admin Protected Route
 function SuperAdminRoute ({ children }) {
@@ -62,21 +63,17 @@ function AdminLayout () {
         <main className='admin-main-content'>
           <Routes>
             <Route path='/dashboard' element={<WelcomePage />} />
-
             {/* Book Management */}
             <Route path='/books' element={<BookList />} />
             <Route path='/add/book' element={<AddBook />} />
             <Route path='/edit/book/:id' element={<BookPageForEdit />} />
             <Route path='/book/:id' element={<BookDetail />} />
-
             {/* Discount Management */}
             <Route path='/discounts' element={<DiscountList />} />
             <Route path='/add/discount' element={<CreateDiscount />} />
             <Route path='/edit/discount/:id' element={<DiscountForEdit />} />
-
             {/* User Management */}
             <Route path='/users' element={<UserList />} />
-
             {/* Super Admin Only */}
             <Route
               path='/admins'
@@ -86,7 +83,6 @@ function AdminLayout () {
                 </SuperAdminRoute>
               }
             />
-
             <Route
               path='/create/admin'
               element={
@@ -95,15 +91,14 @@ function AdminLayout () {
                 </SuperAdminRoute>
               }
             />
-
             {/* Pincode Management */}
             <Route path='/pincodes' element={<PincodeList />} />
             <Route path='/add/pincode' element={<AddPincode />} />
             <Route path='/edit/pincode/:id' element={<EditPincode />} />
-
             {/* Transaction Management */}
             <Route path='/transactions' element={<TransactionList />} />
-
+            {/* Review Management */}
+            <Route path='/reviews' element={<ReviewList />} />
             {/* Default Route */}
             <Route path='*' element={<Navigate to='/dashboard' replace />} />
           </Routes>

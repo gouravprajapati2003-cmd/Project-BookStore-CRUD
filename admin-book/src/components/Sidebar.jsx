@@ -16,6 +16,11 @@ function Sidebar () {
       path: '/transactions',
       icon: 'bi-arrow-left-right'
     },
+    {
+      title: 'Manage Reviews',
+      path: '/reviews',
+      icon: 'bi-star-half'
+    },
     ...(isSuperAdmin
       ? [{ title: 'Manage Admins', path: '/admins', icon: 'bi-shield-lock' }]
       : [])
