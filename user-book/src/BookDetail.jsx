@@ -765,7 +765,7 @@ function BookDetail () {
         </DetailSection>
 
         {/* Customer Reviews */}
-        <ReviewSection bookId={id} onSummaryChange={setRatingSummary} />
+        <ReviewSection bookId={book._id} onSummaryChange={setRatingSummary} />
 
         {/* Product Description */}
         {book.description && (
