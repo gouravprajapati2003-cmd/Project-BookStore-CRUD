@@ -18,14 +18,23 @@ const isBookPurchased = async (email, bookId) => {
     .select('status products')
     .lean()
 
-  console.log('REVIEW PURCHASE DEBUG:', {
-    email: normalizedEmail,
-    requestedBookId: String(bookId),
-    transactions: transactions.map(transaction => ({
-      status: transaction.status,
-      products: transaction.products
-    }))
-  })
+  console.log(
+  'REVIEW PURCHASE DEBUG:',
+  JSON.stringify(
+    {
+      requestedBookId: String(bookId),
+      transactions: transactions.map(transaction => ({
+        status: transaction.status,
+        products: (transaction.products || []).map(product => ({
+          bookId: product.bookId
+        }))
+      }))
+    },
+    null,
+    2
+  )
+)
+
 
   const transaction = transactions.find(
     item =>
