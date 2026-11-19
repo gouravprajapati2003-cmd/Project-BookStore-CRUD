@@ -10,14 +10,34 @@ const getCustomerName = user => {
 
 // Check successful purchase
 const isBookPurchased = async (email, bookId) => {
-  const transaction = await Transaction.findOne({
-    email: email.toLowerCase(),
-    status: 'Success',
-    'products.bookId': String(bookId)
+  const normalizedEmail = email.trim().toLowerCase()
+
+  const transactions = await Transaction.find({
+    email: normalizedEmail
   })
+    .select('status products')
+    .lean()
+
+  console.log('REVIEW PURCHASE DEBUG:', {
+    email: normalizedEmail,
+    requestedBookId: String(bookId),
+    transactions: transactions.map(transaction => ({
+      status: transaction.status,
+      products: transaction.products
+    }))
+  })
+
+  const transaction = transactions.find(
+    item =>
+      item.status === 'Success' &&
+      (item.products || []).some(
+        product => String(product.bookId) === String(bookId)
+      )
+  )
 
   return !!transaction
 }
+
 
 // ADD / UPDATE REVIEW
 exports.addReview = async (req, res) => {
