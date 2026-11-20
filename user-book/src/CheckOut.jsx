@@ -11,9 +11,9 @@ import {
   Badge
 } from 'react-bootstrap'
 import { useSelector, useDispatch } from 'react-redux'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import {
-  deleteCart,
+  deleteProduct,
   clearCartMessage,
   updateQuantity
 } from './feactures/cart/cartSlice'
@@ -34,24 +34,18 @@ const initialShippingDetails = {
   pincode: ''
 }
 
-function getBookPrice(product) {
-  const originalPrice = Number(
-    product.originalPrice ?? product.price ?? 0
-  )
+function getBookPrice (product) {
+  const originalPrice = Number(product.originalPrice ?? product.price ?? 0)
 
   const discountValue = Number(product.discountValue || 0)
 
   const hasDiscount =
-    product.status?.toLowerCase() === 'active' &&
-    discountValue > 0
+    product.status?.toLowerCase() === 'active' && discountValue > 0
 
   if (!hasDiscount) return originalPrice
 
   if (product.discountType === 'Percentage') {
-    return Math.max(
-      0,
-      originalPrice - (originalPrice * discountValue) / 100
-    )
+    return Math.max(0, originalPrice - (originalPrice * discountValue) / 100)
   }
 
   if (product.discountType === 'Fixed') {
@@ -61,11 +55,22 @@ function getBookPrice(product) {
   return originalPrice
 }
 
-function CheckOut() {
+function CheckOut () {
   const navigate = useNavigate()
+  const location = useLocation()
   const dispatch = useDispatch()
 
   const { products } = useSelector(state => state.cart)
+
+  // Buy Now se aayi hui single book
+  const buyNowProduct = location.state?.buyNowProduct
+
+  // Cart se selected books ki IDs
+  const selectedProductIds = location.state?.selectedProductIds
+
+  const isBuyNow = Boolean(buyNowProduct)
+
+  const [buyNowQuantity, setBuyNowQuantity] = useState(1)
 
   const [shipping, setShipping] = useState(initialShippingDetails)
   const [authChecking, setAuthChecking] = useState(true)
@@ -73,11 +78,23 @@ function CheckOut() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  const orderProducts = products.map(product => {
-    const quantity = Math.max(1, Number(product.quantity || 1))
-    const originalPrice = Number(
-      product.originalPrice ?? product.price ?? 0
-    )
+  // Decide which books will be purchased
+  const checkoutProducts = isBuyNow
+    ? [buyNowProduct]
+    : Array.isArray(selectedProductIds)
+    ? products.filter(product =>
+        selectedProductIds.includes(String(product._id))
+      )
+    : products
+
+  // Prepare final order products
+  const orderProducts = checkoutProducts.map(product => {
+    const quantity = isBuyNow
+      ? buyNowQuantity
+      : Math.max(1, Number(product.quantity || 1))
+
+    const originalPrice = Number(product.originalPrice ?? product.price ?? 0)
+
     const finalPrice = getBookPrice(product)
 
     return {
@@ -90,8 +107,7 @@ function CheckOut() {
   })
 
   const totalOriginalPrice = orderProducts.reduce(
-    (total, product) =>
-      total + product.originalPrice * product.quantity,
+    (total, product) => total + product.originalPrice * product.quantity,
     0
   )
 
@@ -102,6 +118,7 @@ function CheckOut() {
 
   const totalSavings = totalOriginalPrice - totalCost
 
+  // Login check and email prefill
   useEffect(() => {
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true'
     const email = localStorage.getItem('email')
@@ -121,11 +138,12 @@ function CheckOut() {
     setAuthChecking(false)
   }, [navigate])
 
+  // If no selected products are available, go back to cart
   useEffect(() => {
-    if (!authChecking && products.length === 0) {
+    if (!authChecking && checkoutProducts.length === 0) {
       navigate('/cart', { replace: true })
     }
-  }, [products.length, authChecking, navigate])
+  }, [checkoutProducts.length, authChecking, navigate])
 
   const handleChange = e => {
     const { name, value } = e.target
@@ -136,7 +154,13 @@ function CheckOut() {
     }))
   }
 
+  // Buy Now quantity
   const increaseQuantity = product => {
+    if (isBuyNow) {
+      setBuyNowQuantity(previous => previous + 1)
+      return
+    }
+
     dispatch(
       updateQuantity({
         id: product._id,
@@ -146,6 +170,11 @@ function CheckOut() {
   }
 
   const decreaseQuantity = product => {
+    if (isBuyNow) {
+      setBuyNowQuantity(previous => Math.max(1, previous - 1))
+      return
+    }
+
     const currentQuantity = Number(product.quantity || 1)
 
     if (currentQuantity > 1) {
@@ -175,17 +204,13 @@ function CheckOut() {
           return
         }
 
-        existingScript.addEventListener(
-          'load',
-          () => resolve(true),
-          { once: true }
-        )
+        existingScript.addEventListener('load', () => resolve(true), {
+          once: true
+        })
 
-        existingScript.addEventListener(
-          'error',
-          () => resolve(false),
-          { once: true }
-        )
+        existingScript.addEventListener('error', () => resolve(false), {
+          once: true
+        })
 
         return
       }
@@ -222,8 +247,8 @@ function CheckOut() {
       return
     }
 
-    if (!products || products.length === 0) {
-      setError('Your cart is empty.')
+    if (!checkoutProducts || checkoutProducts.length === 0) {
+      setError('Please select at least one book to purchase.')
       return
     }
 
@@ -240,6 +265,7 @@ function CheckOut() {
     if (
       !shipping.firstName.trim() ||
       !shipping.lastName.trim() ||
+      !shipping.email.trim() ||
       !shipping.mobileNo.trim() ||
       !shipping.addressLine1.trim() ||
       !shipping.city.trim() ||
@@ -251,8 +277,8 @@ function CheckOut() {
       return
     }
 
-    if (!/^\S+@\S+\.\S+$/.test(savedEmail.trim())) {
-      setError('Please check your account email address.')
+    if (!/^\S+@\S+\.\S+$/.test(shipping.email.trim())) {
+      setError('Please enter a valid email address.')
       return
     }
 
@@ -282,15 +308,12 @@ function CheckOut() {
 
       const orderPayload = {
         ...shipping,
-        email: savedEmail.trim().toLowerCase(),
+        email: shipping.email.trim().toLowerCase(),
         amount: Number(totalCost.toFixed(2)),
         products: orderProducts.map(product => ({
           bookId: product._id,
           bookTitle:
-            product.bookTittle ||
-            product.bookTitle ||
-            product.title ||
-            'Book',
+            product.bookTittle || product.bookTitle || product.title || 'Book',
           bookImage: product.bookImage || '',
           quantity: product.quantity,
           originalPrice: product.originalPrice,
@@ -323,7 +346,7 @@ function CheckOut() {
 
         prefill: {
           name: `${shipping.firstName} ${shipping.lastName}`,
-          email: savedEmail.trim(),
+          email: shipping.email.trim(),
           contact: shipping.mobileNo
         },
 
@@ -340,12 +363,9 @@ function CheckOut() {
             const verifyResponse = await axios.post(
               `${apiUrl}/verify-payment`,
               {
-                razorpay_order_id:
-                  paymentResponse.razorpay_order_id,
-                razorpay_payment_id:
-                  paymentResponse.razorpay_payment_id,
-                razorpay_signature:
-                  paymentResponse.razorpay_signature
+                razorpay_order_id: paymentResponse.razorpay_order_id,
+                razorpay_payment_id: paymentResponse.razorpay_payment_id,
+                razorpay_signature: paymentResponse.razorpay_signature
               }
             )
 
@@ -353,13 +373,20 @@ function CheckOut() {
               throw new Error('Payment verification failed.')
             }
 
-            dispatch(deleteCart())
+            // Cart checkout: remove only purchased books
+            // Buy Now: do not modify the existing cart
+            if (isBuyNow) {
+              dispatch(deleteProduct(buyNowProduct._id))
+            } else {
+              orderProducts.forEach(product => {
+                dispatch(deleteProduct(product._id))
+              })
+            }
+
             dispatch(clearCartMessage())
 
             setShipping(initialShippingDetails)
-            setSuccess(
-              'Payment successful! Redirecting to My Orders...'
-            )
+            setSuccess('Payment successful! Redirecting to My Orders...')
             setError('')
             setLoading(false)
 
@@ -367,10 +394,7 @@ function CheckOut() {
               navigate('/myorders', { replace: true })
             }, 1000)
           } catch (verificationError) {
-            console.error(
-              'Payment verification error:',
-              verificationError
-            )
+            console.error('Payment verification error:', verificationError)
 
             setError(
               verificationError.response?.data?.message ||
@@ -394,8 +418,7 @@ function CheckOut() {
         console.error('Razorpay payment failed:', response.error)
 
         setError(
-          response.error?.description ||
-            'Payment failed. Please try again.'
+          response.error?.description || 'Payment failed. Please try again.'
         )
 
         setLoading(false)
@@ -424,7 +447,7 @@ function CheckOut() {
     )
   }
 
-  if (products.length === 0) {
+  if (checkoutProducts.length === 0) {
     return (
       <Container className='text-center py-5'>
         <Spinner animation='border' />
@@ -441,18 +464,12 @@ function CheckOut() {
       </h2>
 
       {error && (
-        <Alert
-          variant='danger'
-          dismissible
-          onClose={() => setError('')}
-        >
+        <Alert variant='danger' dismissible onClose={() => setError('')}>
           {error}
         </Alert>
       )}
 
-      {success && (
-        <Alert variant='success'>{success}</Alert>
-      )}
+      {success && <Alert variant='success'>{success}</Alert>}
 
       <Row className='g-4'>
         <Col lg={8}>
@@ -491,7 +508,7 @@ function CheckOut() {
                 type='email'
                 name='email'
                 value={shipping.email}
-                readOnly
+                onChange={handleChange}
                 required
               />
             </Form.Group>
@@ -503,9 +520,7 @@ function CheckOut() {
                 name='mobileNo'
                 value={shipping.mobileNo}
                 onChange={e => {
-                  const value = e.target.value
-                    .replace(/\D/g, '')
-                    .slice(0, 10)
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 10)
 
                   setShipping(previous => ({
                     ...previous,
@@ -518,9 +533,7 @@ function CheckOut() {
               />
             </Form.Group>
 
-            <h5 className='mt-3 text-primary'>
-              Shipping Address
-            </h5>
+            <h5 className='mt-3 text-primary'>Shipping Address</h5>
 
             <Form.Group className='mb-3'>
               <Form.Label>Address Line 1</Form.Label>
@@ -609,9 +622,7 @@ function CheckOut() {
 
         <Col lg={4}>
           <div className='border rounded p-3 shadow-sm'>
-            <h4 className='text-center text-danger'>
-              Product Summary
-            </h4>
+            <h4 className='text-center text-danger'>Product Summary</h4>
 
             <div className='table-responsive'>
               <table className='table mt-3 align-middle'>
@@ -630,9 +641,7 @@ function CheckOut() {
                         <img
                           src={product.bookImage}
                           alt={
-                            product.bookTittle ||
-                            product.bookTitle ||
-                            'Book'
+                            product.bookTittle || product.bookTitle || 'Book'
                           }
                           width='45'
                           height='55'
@@ -649,8 +658,7 @@ function CheckOut() {
                         </div>
 
                         <small className='text-muted d-block'>
-                          ₹{product.finalPrice.toFixed(2)} ×{' '}
-                          {product.quantity}
+                          ₹{product.finalPrice.toFixed(2)} × {product.quantity}
                         </small>
 
                         <div className='d-flex align-items-center gap-2 mt-2'>
@@ -658,12 +666,8 @@ function CheckOut() {
                             type='button'
                             variant='outline-secondary'
                             size='sm'
-                            disabled={
-                              product.quantity <= 1 || loading
-                            }
-                            onClick={() =>
-                              decreaseQuantity(product)
-                            }
+                            disabled={product.quantity <= 1 || loading}
+                            onClick={() => decreaseQuantity(product)}
                           >
                             −
                           </Button>
@@ -677,22 +681,17 @@ function CheckOut() {
                             variant='outline-primary'
                             size='sm'
                             disabled={loading}
-                            onClick={() =>
-                              increaseQuantity(product)
-                            }
+                            onClick={() => increaseQuantity(product)}
                           >
                             +
                           </Button>
                         </div>
 
-                        {product.finalPrice <
-                          product.originalPrice && (
+                        {product.finalPrice < product.originalPrice && (
                           <div className='mt-1'>
                             <Badge bg='success'>
-                              {product.status?.toLowerCase() ===
-                              'active'
-                                ? product.discountType ===
-                                  'Percentage'
+                              {product.status?.toLowerCase() === 'active'
+                                ? product.discountType === 'Percentage'
                                   ? `${product.discountValue}% Off`
                                   : `₹${product.discountValue} Off`
                                 : 'Discount'}
@@ -713,9 +712,7 @@ function CheckOut() {
             <hr />
 
             <div className='d-flex justify-content-between mb-2'>
-              <span className='text-muted'>
-                Original Price
-              </span>
+              <span className='text-muted'>Original Price</span>
               <span>
                 ₹
                 {totalOriginalPrice.toLocaleString('en-IN', {
@@ -725,9 +722,7 @@ function CheckOut() {
             </div>
 
             <div className='d-flex justify-content-between mb-2'>
-              <span className='text-success'>
-                Total Savings
-              </span>
+              <span className='text-success'>Total Savings</span>
               <span className='text-success fw-semibold'>
                 - ₹
                 {totalSavings.toLocaleString('en-IN', {
@@ -739,9 +734,7 @@ function CheckOut() {
             <hr />
 
             <div className='d-flex justify-content-between align-items-center'>
-              <strong className='fs-5'>
-                Total Amount
-              </strong>
+              <strong className='fs-5'>Total Amount</strong>
 
               <strong className='fs-5 text-success'>
                 ₹
@@ -757,15 +750,11 @@ function CheckOut() {
               variant='warning'
               size='lg'
               className='w-100 fw-semibold mt-4'
-              disabled={loading || products.length === 0}
+              disabled={loading || checkoutProducts.length === 0}
             >
               {loading ? (
                 <>
-                  <Spinner
-                    animation='border'
-                    size='sm'
-                    className='me-2'
-                  />
+                  <Spinner animation='border' size='sm' className='me-2' />
                   Processing...
                 </>
               ) : (

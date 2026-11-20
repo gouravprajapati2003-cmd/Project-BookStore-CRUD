@@ -134,11 +134,21 @@ function BookDetail () {
   const buyNow = () => {
     if (!book._id) return
 
-    if (!isAlreadyInCart && !hasAddedToCart) {
-      dispatch(addProduct(book))
-    }
+    dispatch(
+      addProduct({
+        ...book,
+        quantity: 1
+      })
+    )
 
-    navigate('/checkout')
+    navigate('/checkout', {
+      state: {
+        buyNowProduct: {
+          ...book,
+          quantity: 1
+        }
+      }
+    })
   }
 
   // Pincode Availability

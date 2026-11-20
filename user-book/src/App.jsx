@@ -11,11 +11,14 @@ import CheckOut from './CheckOut.jsx'
 import MyOrder from './MyOrder.jsx'
 import PaymentSuccess from './PaymentSuccess.jsx'
 import PaymentFailure from './PaymentFailure.jsx'
+import ScrollToTop from './ScrollToTop.jsx'
+
 
 function App () {
   return (
     <Provider store={store}>
       <BrowserRouter>
+      <ScrollToTop></ScrollToTop>
         <NavBar />
         <main
           style={{
