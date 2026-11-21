@@ -78,7 +78,9 @@ function BookDetail () {
         setShowAlreadyAdded(false)
 
         const res = await axios.get(`${apiUrl}/user/book/${id}`)
-        setBook(res.data.data || {})
+        const bookData = res.data.data || {}
+
+        setBook(bookData)
 
         dispatch(clearCartMessage())
       } catch (err) {

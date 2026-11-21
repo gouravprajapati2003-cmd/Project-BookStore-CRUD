@@ -25,18 +25,35 @@ const getBooks = async (req, res) => {
 
 const getBookForUser = async (req, res) => {
   try {
-    let id = req.params.id
-    let book = await Book.findOne({ _id: id }).lean()
-    //console.log(book)
-    let discount = await Discount.findOne({ book: book._id }).lean()
-    book = { ...book, ...discount }
-    //console.log(book)
-    res.status(200).send({ data: book })
+    const id = req.params.id
+
+    const book = await Book.findById(id).lean()
+
+    if (!book) {
+      return res.status(404).send({
+        message: 'Book not found'
+      })
+    }
+
+    const discount = await Discount.findOne({ book: book._id }).lean()
+
+    const bookData = {
+      ...book,
+      DiscountDetail: discount ? [discount] : []
+    }
+
+    return res.status(200).send({
+      data: bookData
+    })
   } catch (err) {
-    console.log(err)
-    res.status(400).send({ message: 'Somethin Went Wrong' })
+    console.log('GET BOOK FOR USER ERROR:', err)
+
+    return res.status(400).send({
+      message: 'Something Went Wrong'
+    })
   }
 }
+
 
 module.exports = {
   getBooks,
