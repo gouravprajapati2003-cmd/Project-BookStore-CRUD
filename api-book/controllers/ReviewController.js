@@ -1,6 +1,7 @@
 const Review = require('../models/Review')
 const Transaction = require('../models/Transaction')
 const User = require('../models/User')
+const Book = require('../models/Book')
 const mongoose = require('mongoose')
 
 // Get customer name from User collection
@@ -150,7 +151,6 @@ exports.addReview = async (req, res) => {
     })
   }
 }
-
 
 // GET ALL REVIEWS FOR A BOOK
 exports.getReviews = async (req, res) => {
