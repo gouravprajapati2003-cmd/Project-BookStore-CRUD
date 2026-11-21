@@ -132,11 +132,17 @@ function ReviewList () {
   const getBookName = review => {
     const book = review.book
 
-    if (!book) return 'Book Deleted'
+    if (typeof book === 'object' && book !== null) {
+      return (
+        book.bookTittle ||
+        book.bookTitle ||
+        book.title ||
+        review.bookTitle ||
+        'Book Deleted'
+      )
+    }
 
-    if (typeof book === 'string') return 'Book'
-
-    return book.bookTitle || book.bookTittle || book.title || 'Unknown Book'
+    return review.bookTitle || 'Book Deleted'
   }
 
   // Format Date

@@ -49,6 +49,15 @@ exports.addReview = async (req, res) => {
       })
     }
 
+    // Check whether book exists
+    const book = await Book.findById(bookId).select('bookTittle')
+
+    if (!book) {
+      return res.status(404).json({
+        message: 'Book not found'
+      })
+    }
+
     const numericRating = Number(rating)
 
     if (
@@ -78,7 +87,6 @@ exports.addReview = async (req, res) => {
       })
     }
 
-    // Fetch actual customer from database
     const user = await User.findById(userId).select('firstName lastName email')
 
     if (!user) {
@@ -110,6 +118,7 @@ exports.addReview = async (req, res) => {
       { book: bookId, userId },
       {
         $set: {
+          bookTitle: book.bookTittle || '',
           rating: numericRating,
           title: title.trim(),
           comment: comment.trim(),
@@ -141,6 +150,7 @@ exports.addReview = async (req, res) => {
     })
   }
 }
+
 
 // GET ALL REVIEWS FOR A BOOK
 exports.getReviews = async (req, res) => {
