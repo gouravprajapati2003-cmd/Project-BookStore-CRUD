@@ -1,22 +1,22 @@
 import axios from 'axios'
 
-// Global Axios Response Interceptor
+// Admin Panel Global Axios Response Interceptor
 axios.interceptors.response.use(
   response => response,
 
   error => {
     if (error.response?.status === 401) {
-      const token = localStorage.getItem('token')
+      const adminToken = localStorage.getItem('adminToken')
 
-      if (token) {
-        localStorage.removeItem('token')
-        localStorage.removeItem('name')
-        localStorage.removeItem('email')
-        localStorage.removeItem('userType')
-        localStorage.removeItem('isSuperAdmin')
+      if (adminToken) {
+        localStorage.removeItem('adminToken')
+        localStorage.removeItem('adminName')
+        localStorage.removeItem('adminEmail')
+        localStorage.removeItem('adminUserType')
+        localStorage.removeItem('adminIsSuperAdmin')
         localStorage.removeItem('adminLoginTime')
 
-        window.location.replace('/')
+        window.location.replace('/admin/')
       }
     }
 

@@ -78,12 +78,18 @@ function AdminLogin () {
 
       if (res.data.success && res.data.data?.token) {
         const admin = res.data.data
+        localStorage.removeItem('adminToken')
+        localStorage.removeItem('adminName')
+        localStorage.removeItem('adminEmail')
+        localStorage.removeItem('adminUserType')
+        localStorage.removeItem('adminIsSuperAdmin')
+        localStorage.removeItem('adminLoginTime')
 
-        localStorage.setItem('token', admin.token)
-        localStorage.setItem('name', admin.name)
-        localStorage.setItem('email', admin.email)
-        localStorage.setItem('userType', admin.userType)
-        localStorage.setItem('isSuperAdmin', String(admin.isSuperAdmin))
+        localStorage.setItem('adminToken', admin.token)
+        localStorage.setItem('adminName', admin.name)
+        localStorage.setItem('adminEmail', admin.email)
+        localStorage.setItem('adminUserType', admin.userType)
+        localStorage.setItem('adminIsSuperAdmin', String(admin.isSuperAdmin))
         localStorage.setItem('adminLoginTime', Date.now().toString())
 
         window.location.href = '/admin/dashboard'

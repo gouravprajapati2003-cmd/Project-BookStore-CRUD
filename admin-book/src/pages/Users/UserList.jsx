@@ -29,7 +29,7 @@ function UserList () {
   const [usersPerPage] = useState(5)
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem('adminToken')
 
     axios({
       url: apiUrl + '/users',
@@ -51,7 +51,7 @@ function UserList () {
 
   const toggleUserStatus = async (id, currentStatus) => {
     try {
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('adminToken')
 
       const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active'
 

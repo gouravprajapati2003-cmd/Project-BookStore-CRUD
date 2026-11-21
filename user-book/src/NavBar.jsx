@@ -18,12 +18,13 @@ function NavBar () {
   const location = useLocation()
   const { products } = useSelector(state => state.cart)
 
-  // Login Status
+  // User Login Status
   useEffect(() => {
+    const token = localStorage.getItem('userToken')
     const flag = localStorage.getItem('isLoggedIn')
 
-    setIsLoggedIn(flag === 'true')
-    setUserName(localStorage.getItem('name') || '')
+    setIsLoggedIn(flag === 'true' && !!token)
+    setUserName(localStorage.getItem('userName') || '')
 
     if (sessionStorage.getItem('openLoginModal') === 'true') {
       sessionStorage.removeItem('openLoginModal')
@@ -56,12 +57,12 @@ function NavBar () {
     setShowLoginModal(true)
   }
 
-  // Logout
+  // User Logout
   function handleLogout () {
     localStorage.removeItem('isLoggedIn')
-    localStorage.removeItem('name')
-    localStorage.removeItem('email')
-    localStorage.removeItem('token')
+    localStorage.removeItem('userName')
+    localStorage.removeItem('userEmail')
+    localStorage.removeItem('userToken')
 
     setIsLoggedIn(false)
     setUserName('')
@@ -75,7 +76,7 @@ function NavBar () {
   // Login Success
   function handleLoginSuccess () {
     setIsLoggedIn(true)
-    setUserName(localStorage.getItem('name') || '')
+    setUserName(localStorage.getItem('userName') || '')
     setShowLoginModal(false)
 
     const returnToCheckout =
@@ -99,9 +100,8 @@ function NavBar () {
   }
 
   const goToAdmin = () => {
-  window.location.href = '/admin/'
-}
-
+    window.location.href = '/admin/'
+  }
 
   return (
     <>
@@ -260,10 +260,7 @@ function NavBar () {
                 Home
               </Nav.Link>
 
-              <Nav.Link
-                href='#contact'
-                className='text-white fw-semibold px-2'
-              >
+              <Nav.Link href='#contact' className='text-white fw-semibold px-2'>
                 <i className='bi bi-telephone me-1'></i>
                 Contact
               </Nav.Link>

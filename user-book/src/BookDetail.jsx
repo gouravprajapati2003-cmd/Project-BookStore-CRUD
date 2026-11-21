@@ -953,12 +953,12 @@ function ReviewSection ({ bookId, onSummaryChange }) {
   const [editing, setEditing] = useState(false)
   const [sortBy, setSortBy] = useState('recent')
 
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('userToken')
 
   // Current User ID from JWT
   const getCurrentUserId = () => {
     try {
-      const currentToken = localStorage.getItem('token')
+      const currentToken = localStorage.getItem('userToken')
       if (!currentToken) return null
 
       const base64 = currentToken

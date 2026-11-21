@@ -48,7 +48,7 @@ function ReviewList () {
   // Authentication Headers
   const getAuthConfig = () => ({
     headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`
+      Authorization: `Bearer ${localStorage.getItem('adminToken')}`
     }
   })
 

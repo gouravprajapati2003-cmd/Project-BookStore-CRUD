@@ -22,8 +22,8 @@ const AdminList = () => {
   const [error, setError] = useState('')
   const [updatingId, setUpdatingId] = useState(null)
 
-  const token = localStorage.getItem('token')
-  const isSuperAdmin = localStorage.getItem('isSuperAdmin') === 'true'
+  const token = localStorage.getItem('adminToken')
+  const isSuperAdmin = localStorage.getItem('adminIsSuperAdmin') === 'true'
   const loggedInAdminId = localStorage.getItem('adminId')
 
   // Fetch Admin List

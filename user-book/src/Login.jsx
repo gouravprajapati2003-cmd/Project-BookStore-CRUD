@@ -161,9 +161,9 @@ function Login ({ show, onHide, onLoginSuccess }) {
 
       const user = res.data.data
 
-      localStorage.setItem('token', user.token)
-      localStorage.setItem('name', user.name || '')
-      localStorage.setItem('email', user.email || normalizedEmail)
+      localStorage.setItem('userToken', user.token)
+      localStorage.setItem('userName', user.name || '')
+      localStorage.setItem('userEmail', user.email || normalizedEmail)
       localStorage.setItem('isLoggedIn', 'true')
 
       const shouldReturnToCheckout =

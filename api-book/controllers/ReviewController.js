@@ -10,6 +10,8 @@ const getCustomerName = user => {
 
 // Check successful purchase
 const isBookPurchased = async (email, bookId) => {
+  if (typeof email !== 'string' || !email.trim()) return false
+
   const normalizedEmail = email.trim().toLowerCase()
 
   const transactions = await Transaction.find({
@@ -18,42 +20,20 @@ const isBookPurchased = async (email, bookId) => {
     .select('status products')
     .lean()
 
-  console.log(
-  'REVIEW PURCHASE DEBUG:',
-  JSON.stringify(
-    {
-      requestedBookId: String(bookId),
-      transactions: transactions.map(transaction => ({
-        status: transaction.status,
-        products: (transaction.products || []).map(product => ({
-          bookId: product.bookId
-        }))
-      }))
-    },
-    null,
-    2
-  )
-)
-
-
-  const transaction = transactions.find(
-    item =>
-      item.status === 'Success' &&
-      (item.products || []).some(
+  return transactions.some(
+    transaction =>
+      transaction.status === 'Success' &&
+      (transaction.products || []).some(
         product => String(product.bookId) === String(bookId)
       )
   )
-
-  return !!transaction
 }
-
 
 // ADD / UPDATE REVIEW
 exports.addReview = async (req, res) => {
   try {
     const { rating, title, comment } = req.body
     const { bookId } = req.params
-
     const userId = req.user?._id || req.user?.id
     const email = req.user?.email
 
@@ -81,7 +61,12 @@ exports.addReview = async (req, res) => {
       })
     }
 
-    if (!title?.trim() || !comment?.trim()) {
+    if (
+      typeof title !== 'string' ||
+      typeof comment !== 'string' ||
+      !title.trim() ||
+      !comment.trim()
+    ) {
       return res.status(400).json({
         message: 'Review title and comment are required'
       })
@@ -149,7 +134,7 @@ exports.addReview = async (req, res) => {
       review
     })
   } catch (error) {
-    console.log('Add Review Error:', error.message)
+    console.error('Add Review Error:', error.message)
 
     return res.status(500).json({
       message: 'Unable to submit review'
@@ -180,7 +165,7 @@ exports.getReviews = async (req, res) => {
       reviews
     })
   } catch (error) {
-    console.log('Get Reviews Error:', error.message)
+    console.error('Get Reviews Error:', error.message)
 
     return res.status(500).json({
       message: 'Unable to fetch reviews'
@@ -252,7 +237,7 @@ exports.getRatingSummary = async (req, res) => {
       }
     })
   } catch (error) {
-    console.log('Rating Summary Error:', error.message)
+    console.error('Rating Summary Error:', error.message)
 
     return res.status(500).json({
       message: 'Unable to fetch rating summary'
@@ -272,6 +257,12 @@ exports.deleteReview = async (req, res) => {
       })
     }
 
+    if (!mongoose.Types.ObjectId.isValid(bookId)) {
+      return res.status(400).json({
+        message: 'Invalid book ID'
+      })
+    }
+
     const review = await Review.findOneAndDelete({
       book: bookId,
       userId
@@ -287,7 +278,7 @@ exports.deleteReview = async (req, res) => {
       message: 'Review deleted successfully'
     })
   } catch (error) {
-    console.log('Delete Review Error:', error.message)
+    console.error('Delete Review Error:', error.message)
 
     return res.status(500).json({
       message: 'Unable to delete review'
@@ -378,7 +369,7 @@ exports.markHelpful = async (req, res) => {
       helpfulCount: updatedReview.helpfulCount
     })
   } catch (error) {
-    console.log('Helpful Vote Error:', error.message)
+    console.error('Helpful Vote Error:', error.message)
 
     return res.status(500).json({
       message: 'Unable to update helpful vote'
@@ -420,7 +411,7 @@ exports.updateOldReviewNames = async (req, res) => {
       updatedCount
     })
   } catch (error) {
-    console.log('Update Old Review Names Error:', error.message)
+    console.error('Update Old Review Names Error:', error.message)
 
     return res.status(500).json({
       message: 'Unable to update old review names'
@@ -463,7 +454,7 @@ exports.updateReviewStatus = async (req, res) => {
       review
     })
   } catch (error) {
-    console.log('Update Review Status Error:', error.message)
+    console.error('Update Review Status Error:', error.message)
 
     return res.status(500).json({
       message: 'Unable to update review status'
@@ -471,15 +462,17 @@ exports.updateReviewStatus = async (req, res) => {
   }
 }
 
-// Admin: Get All Reviews
+// ADMIN: GET ALL REVIEWS
 exports.getAllReviews = async (req, res) => {
   try {
     const { status = 'All', search = '', page = 1, limit = 5 } = req.query
 
-    const pageNumber = Math.max(1, Number(page) || 1)
-    const limitNumber = Math.max(1, Number(limit) || 5)
+    const pageNumber = Math.max(1, parseInt(page, 10) || 1)
+    const limitNumber = Math.min(50, Math.max(1, parseInt(limit, 10) || 5))
 
-    // Fetch all reviews with book details
+    const searchText =
+      typeof search === 'string' ? search.trim().toLowerCase() : ''
+
     let reviews = await Review.find()
       .populate('book')
       .sort({ createdAt: -1 })
@@ -491,9 +484,7 @@ exports.getAllReviews = async (req, res) => {
     }
 
     // Search reviews
-    if (search.trim()) {
-      const keyword = search.trim().toLowerCase()
-
+    if (searchText) {
       reviews = reviews.filter(review => {
         const book = review.book || {}
 
@@ -509,14 +500,12 @@ exports.getAllReviews = async (req, res) => {
           .join(' ')
           .toLowerCase()
 
-        return searchableText.includes(keyword)
+        return searchableText.includes(searchText)
       })
     }
 
     const totalReviews = reviews.length
-
     const totalPages = Math.ceil(totalReviews / limitNumber)
-
     const startIndex = (pageNumber - 1) * limitNumber
 
     const paginatedReviews = reviews.slice(startIndex, startIndex + limitNumber)
@@ -529,7 +518,7 @@ exports.getAllReviews = async (req, res) => {
       reviews: paginatedReviews
     })
   } catch (error) {
-    console.log('Get All Reviews Error:', error.message)
+    console.error('Get All Reviews Error:', error.message)
 
     return res.status(500).json({
       success: false,

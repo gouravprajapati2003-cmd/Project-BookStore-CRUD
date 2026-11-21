@@ -62,7 +62,7 @@ function CreateAdmin () {
       return
     }
 
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem('adminToken')
 
     if (!token) {
       setMessage({

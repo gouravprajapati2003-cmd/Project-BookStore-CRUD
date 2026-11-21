@@ -18,15 +18,16 @@ function AdminNavbar () {
   const [username, setUsername] = useState('Admin')
 
   useEffect(() => {
-    setUsername(localStorage.getItem('name') || 'Admin')
+    setUsername(localStorage.getItem('adminName') || 'Admin')
   }, [])
 
   const handleLogout = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('name')
-    localStorage.removeItem('email')
-    localStorage.removeItem('userType')
-    localStorage.removeItem('isSuperAdmin')
+    // Remove only Admin login data
+    localStorage.removeItem('adminToken')
+    localStorage.removeItem('adminName')
+    localStorage.removeItem('adminEmail')
+    localStorage.removeItem('adminUserType')
+    localStorage.removeItem('adminIsSuperAdmin')
     localStorage.removeItem('adminLoginTime')
 
     navigate('/', { replace: true })
@@ -91,7 +92,6 @@ function AdminNavbar () {
             min-width: 210px;
           }
 
-          /* Tablet */
           @media (min-width: 768px) and (max-width: 991px) {
             .admin-navbar {
               min-height: 85px;
@@ -117,7 +117,6 @@ function AdminNavbar () {
             }
           }
 
-          /* Mobile */
           @media (max-width: 767px) {
             .admin-navbar {
               min-height: 75px;
@@ -186,7 +185,6 @@ function AdminNavbar () {
 
       <Navbar expand='lg' className='admin-navbar py-2'>
         <Container fluid className='px-3 px-md-4'>
-          {/* Logo */}
           <Navbar.Brand
             as={NavLink}
             to='/dashboard'
@@ -214,14 +212,12 @@ function AdminNavbar () {
             </div>
           </Navbar.Brand>
 
-          {/* Mobile Toggle */}
           <Navbar.Toggle aria-controls='admin-navbar' className='bg-light' />
 
           <Navbar.Collapse
             id='admin-navbar'
             className='justify-content-end admin-navbar-collapse'
           >
-            {/* Navigation */}
             <Nav className='align-items-lg-center gap-lg-4 me-lg-4 admin-navbar-links'>
               <Nav.Link
                 as={NavLink}
@@ -242,7 +238,6 @@ function AdminNavbar () {
               </Nav.Link>
             </Nav>
 
-            {/* Profile Dropdown */}
             <Dropdown align='end' className='admin-profile-dropdown'>
               <Dropdown.Toggle
                 variant='light'
