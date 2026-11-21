@@ -11,15 +11,15 @@ function MyOrder () {
 
   useEffect(() => {
     const fetchMyOrders = async () => {
-      const isLoggedIn = localStorage.getItem('isLoggedIn')
+      const userToken = localStorage.getItem('userToken')
 
-      if (!isLoggedIn) {
+      if (!userToken) {
         setError('Please login to view your orders.')
         setLoading(false)
         return
       }
 
-      const email = localStorage.getItem('email')
+      const email = localStorage.getItem('userEmail')
 
       if (!email) {
         setError('User email not found. Please login again.')

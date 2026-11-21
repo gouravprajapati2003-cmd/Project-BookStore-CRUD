@@ -4,7 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap-icons/font/bootstrap-icons.css'
 
 function Sidebar () {
-  const isSuperAdmin = localStorage.getItem('isSuperAdmin') === 'true'
+  const isSuperAdmin = localStorage.getItem('adminIsSuperAdmin') === 'true'
 
   const menuItems = [
     { title: 'Manage Book', path: '/books', icon: 'bi-book' },

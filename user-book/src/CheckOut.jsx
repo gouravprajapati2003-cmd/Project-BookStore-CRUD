@@ -120,8 +120,8 @@ function CheckOut () {
 
   // Login check and email prefill
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true'
-    const email = localStorage.getItem('email')
+    const isLoggedIn = Boolean(localStorage.getItem('userToken'))
+    const email = localStorage.getItem('userEmail')
 
     if (!isLoggedIn || !email) {
       sessionStorage.setItem('openLoginModal', 'true')
@@ -237,8 +237,8 @@ function CheckOut () {
     setError('')
     setSuccess('')
 
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true'
-    const savedEmail = localStorage.getItem('email')
+    const isLoggedIn = Boolean(localStorage.getItem('userToken'))
+    const savedEmail = localStorage.getItem('userEmail')
 
     if (!isLoggedIn || !savedEmail) {
       sessionStorage.setItem('openLoginModal', 'true')
