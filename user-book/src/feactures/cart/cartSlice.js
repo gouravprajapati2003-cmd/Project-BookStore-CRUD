@@ -1,26 +1,51 @@
 import { createSlice } from '@reduxjs/toolkit'
 
+// Get currently active and valid discount
+const getActiveDiscount = product => {
+  const discounts = Array.isArray(product?.DiscountDetail)
+    ? product.DiscountDetail
+    : product?.DiscountDetail
+    ? [product.DiscountDetail]
+    : []
+
+  const now = new Date()
+
+  return (
+    discounts.find(discount => {
+      const isActive = discount.status?.toLowerCase() === 'active'
+
+      const validFrom =
+        !discount.validFrom || now >= new Date(discount.validFrom)
+
+      const validTo = !discount.validTo || now <= new Date(discount.validTo)
+
+      return isActive && validFrom && validTo
+    }) || null
+  )
+}
+
+// Calculate discounted book price
 const getPrice = product => {
   const originalPrice = Number(product.originalPrice ?? product.price ?? 0)
 
-  const discountValue = Number(product.discountValue || 0)
+  const discount = getActiveDiscount(product)
 
-  const hasDiscount =
-    product.status?.toLowerCase() === 'active' && discountValue > 0
+  if (!discount) return originalPrice
 
-  if (!hasDiscount) return originalPrice
+  const discountValue = Number(discount.discountValue || 0)
 
-  if (product.discountType === 'Percentage') {
+  if (discount.discountType === 'Percentage') {
     return Math.max(0, originalPrice - (originalPrice * discountValue) / 100)
   }
 
-  if (product.discountType === 'Fixed') {
+  if (discount.discountType === 'Fixed') {
     return Math.max(0, originalPrice - discountValue)
   }
 
   return originalPrice
 }
 
+// Calculate cart total
 const calculateTotal = products => {
   return products.reduce((total, product) => {
     return total + getPrice(product) * Number(product.quantity || 1)
@@ -36,6 +61,7 @@ const initialState = {
 const cartSlice = createSlice({
   name: 'cart',
   initialState,
+
   reducers: {
     addProduct: (state, action) => {
       const newProduct = action.payload
@@ -43,8 +69,13 @@ const cartSlice = createSlice({
       const exists = state.products.find(item => item._id === newProduct._id)
 
       if (exists) {
-        exists.quantity =
+        const updatedQuantity =
           Number(exists.quantity || 1) + Number(newProduct.quantity || 1)
+
+        // Update latest book and discount details
+        Object.assign(exists, newProduct)
+
+        exists.quantity = updatedQuantity
 
         state.message = 'Item quantity updated successfully'
       } else {
@@ -66,7 +97,9 @@ const cartSlice = createSlice({
 
       if (product) {
         product.quantity = Math.max(1, Number(quantity || 1))
+
         state.totalCost = calculateTotal(state.products)
+
         state.message = 'Item quantity updated successfully'
       }
     },
@@ -77,6 +110,7 @@ const cartSlice = createSlice({
       )
 
       state.totalCost = calculateTotal(state.products)
+
       state.message = 'Item removed from cart'
     },
 

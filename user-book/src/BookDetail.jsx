@@ -44,6 +44,27 @@ const theme = {
   star: '#F4B400'
 }
 
+function getActiveDiscount (product) {
+  const discounts = Array.isArray(product?.DiscountDetail)
+    ? product.DiscountDetail
+    : product?.DiscountDetail
+    ? [product.DiscountDetail]
+    : []
+
+  const now = new Date()
+
+  return (
+    discounts.find(discount => {
+      const isActive = discount.status?.toLowerCase() === 'active'
+      const validFrom =
+        !discount.validFrom || now >= new Date(discount.validFrom)
+      const validTo = !discount.validTo || now <= new Date(discount.validTo)
+
+      return isActive && validFrom && validTo
+    }) || null
+  )
+}
+
 function BookDetail () {
   const navigate = useNavigate()
   const { id } = useParams()
@@ -102,20 +123,21 @@ function BookDetail () {
       )
     })
 
-  // Price Calculation
-  const discountValue = Number(book.discountValue || 0)
-  const originalPrice = Number(book.originalPrice || 0)
-
-  const hasDiscount =
-    book.status?.toLowerCase() === 'active' && discountValue > 0
+  // Discount is supplied by the API inside the DiscountDetail array.
+  const activeDiscount = getActiveDiscount(book)
+  const discountValue = Number(activeDiscount?.discountValue || 0)
+  const originalPrice = Number(book.originalPrice ?? book.price ?? 0)
+  const hasDiscount = Boolean(activeDiscount && discountValue > 0)
 
   const finalPrice = hasDiscount
-    ? book.discountType === 'Percentage'
-      ? originalPrice - (originalPrice * discountValue) / 100
-      : Math.max(0, originalPrice - discountValue)
+    ? activeDiscount.discountType === 'Percentage'
+      ? Math.max(0, originalPrice - (originalPrice * discountValue) / 100)
+      : activeDiscount.discountType === 'Fixed'
+      ? Math.max(0, originalPrice - discountValue)
+      : originalPrice
     : originalPrice
 
-  const totalSavings = originalPrice - finalPrice
+  const totalSavings = Math.max(0, originalPrice - finalPrice)
 
   // Add to Cart
   const addToCart = () => {
@@ -296,7 +318,7 @@ function BookDetail () {
                       }}
                     >
                       <i className='bi bi-tag-fill me-1' />
-                      {book.discountType === 'Percentage'
+                      {activeDiscount?.discountType === 'Percentage'
                         ? `${discountValue}% OFF`
                         : `₹${discountValue} OFF`}
                     </Badge>
@@ -512,7 +534,7 @@ function BookDetail () {
                           fontWeight: '600'
                         }}
                       >
-                        {book.discountType === 'Percentage'
+                        {activeDiscount?.discountType === 'Percentage'
                           ? `${discountValue}% OFF`
                           : `₹${discountValue} OFF`}
                       </Badge>
@@ -947,40 +969,10 @@ function ReviewSection ({ bookId, onSummaryChange }) {
   })
 
   const [loadingReviews, setLoadingReviews] = useState(true)
-  const [rating, setRating] = useState(5)
-  const [title, setTitle] = useState('')
-  const [comment, setComment] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [message, setMessage] = useState('')
-  const [editing, setEditing] = useState(false)
   const [sortBy, setSortBy] = useState('recent')
 
   const token = localStorage.getItem('userToken')
 
-  // Current User ID from JWT
-  const getCurrentUserId = () => {
-    try {
-      const currentToken = localStorage.getItem('userToken')
-      if (!currentToken) return null
-
-      const base64 = currentToken
-        .split('.')[1]
-        .replace(/-/g, '+')
-        .replace(/_/g, '/')
-
-      const paddedBase64 = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=')
-
-      const payload = JSON.parse(atob(paddedBase64))
-
-      return payload._id || payload.id || null
-    } catch {
-      return null
-    }
-  }
-
-  const currentUserId = getCurrentUserId()
-
-  // Fetch Reviews and Rating Summary
   const fetchReviews = useCallback(async () => {
     try {
       setLoadingReviews(true)
@@ -995,8 +987,6 @@ function ReviewSection ({ bookId, onSummaryChange }) {
 
       setReviews(fetchedReviews)
       setSummary(fetchedSummary)
-
-      // Send latest summary to BookDetail
       onSummaryChange?.(fetchedSummary)
     } catch (error) {
       console.log('Review fetch error:', error)
@@ -1009,103 +999,10 @@ function ReviewSection ({ bookId, onSummaryChange }) {
     fetchReviews()
   }, [fetchReviews])
 
-  const ownReview = reviews.find(review => {
-    const reviewUserId = review.userId?._id || review.userId
-
-    return currentUserId && String(reviewUserId) === String(currentUserId)
-  })
-
-  // Add / Update Review
-  const submitReview = async e => {
-    e.preventDefault()
-    setMessage('')
-
-    if (!token) {
-      setMessage('Please login first to write a review.')
-      return
-    }
-
-    if (!title.trim() || !comment.trim()) {
-      setMessage('Please enter review title and comment.')
-      return
-    }
-
-    try {
-      setSubmitting(true)
-
-      const res = await axios.post(
-        `${apiUrl}/user/book/${bookId}/review`,
-        {
-          rating,
-          title: title.trim(),
-          comment: comment.trim()
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      )
-
-      setMessage(res.data.message || 'Review submitted successfully.')
-      setTitle('')
-      setComment('')
-      setRating(5)
-      setEditing(false)
-
-      await fetchReviews()
-    } catch (error) {
-      setMessage(error.response?.data?.message || 'Unable to submit review.')
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  // Edit Own Review
-  const editReview = () => {
-    if (!ownReview) return
-
-    setRating(ownReview.rating)
-    setTitle(ownReview.title)
-    setComment(ownReview.comment)
-    setEditing(true)
-
-    document.getElementById('review-form')?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'center'
-    })
-  }
-
-  // Delete Own Review
-  const deleteReview = async () => {
-    if (!token) return
-
-    if (!window.confirm('Are you sure you want to delete your review?')) {
-      return
-    }
-
-    try {
-      await axios.delete(`${apiUrl}/user/book/${bookId}/review`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      })
-
-      setMessage('Review deleted successfully.')
-      setEditing(false)
-      setTitle('')
-      setComment('')
-
-      await fetchReviews()
-    } catch (error) {
-      setMessage(error.response?.data?.message || 'Unable to delete review.')
-    }
-  }
-
   // Helpful Vote
   const markHelpful = async reviewId => {
     if (!token) {
-      setMessage('Please login first to vote.')
+      alert('Please login first to vote.')
       return
     }
 
@@ -1122,7 +1019,7 @@ function ReviewSection ({ bookId, onSummaryChange }) {
 
       await fetchReviews()
     } catch (error) {
-      setMessage(error.response?.data?.message || 'Unable to mark helpful.')
+      alert(error.response?.data?.message || 'Unable to mark review helpful.')
     }
   }
 
@@ -1130,6 +1027,7 @@ function ReviewSection ({ bookId, onSummaryChange }) {
   const sortedReviews = [...reviews].sort((a, b) => {
     if (sortBy === 'highest') return b.rating - a.rating
     if (sortBy === 'lowest') return a.rating - b.rating
+
     if (sortBy === 'helpful') {
       return (b.helpfulCount || 0) - (a.helpfulCount || 0)
     }
@@ -1243,115 +1141,6 @@ function ReviewSection ({ bookId, onSummaryChange }) {
 
             <hr />
 
-            {/* Write Review Form */}
-            <div
-              id='review-form'
-              className='rounded-4 p-3 p-md-4 mb-4'
-              style={{
-                background: '#F5F8FA',
-                border: `1px solid ${theme.border}`
-              }}
-            >
-              <h6 className='fw-bold mb-3' style={{ color: theme.primary }}>
-                {editing ? 'Edit Your Review' : 'Write a Customer Review'}
-              </h6>
-
-              <Form onSubmit={submitReview}>
-                <Form.Group className='mb-3'>
-                  <Form.Label className='fw-semibold small'>
-                    Your Rating
-                  </Form.Label>
-
-                  <div className='d-flex gap-2'>
-                    {[1, 2, 3, 4, 5].map(star => (
-                      <i
-                        key={star}
-                        role='button'
-                        onClick={() => setRating(star)}
-                        className={`bi ${
-                          star <= rating ? 'bi-star-fill' : 'bi-star'
-                        }`}
-                        style={{
-                          color: theme.star,
-                          fontSize: '27px',
-                          cursor: 'pointer'
-                        }}
-                      />
-                    ))}
-                  </div>
-                </Form.Group>
-
-                <Form.Group className='mb-3'>
-                  <Form.Label className='fw-semibold small'>
-                    Review Title
-                  </Form.Label>
-
-                  <Form.Control
-                    value={title}
-                    onChange={e => setTitle(e.target.value)}
-                    maxLength={100}
-                    placeholder='Summarize your experience'
-                    required
-                  />
-                </Form.Group>
-
-                <Form.Group className='mb-3'>
-                  <Form.Label className='fw-semibold small'>
-                    Your Review
-                  </Form.Label>
-
-                  <Form.Control
-                    as='textarea'
-                    rows={4}
-                    value={comment}
-                    onChange={e => setComment(e.target.value)}
-                    maxLength={2000}
-                    placeholder='What did you like or dislike about this book?'
-                    required
-                  />
-                </Form.Group>
-
-                {message && (
-                  <div
-                    className='small fw-semibold mb-3'
-                    style={{ color: theme.secondary }}
-                  >
-                    {message}
-                  </div>
-                )}
-
-                <div className='d-flex gap-2 flex-wrap'>
-                  <Button
-                    type='submit'
-                    disabled={submitting}
-                    className='border-0 px-4'
-                    style={{ background: theme.primary }}
-                  >
-                    {submitting
-                      ? 'Submitting...'
-                      : editing
-                      ? 'Update Review'
-                      : 'Submit Review'}
-                  </Button>
-
-                  {editing && (
-                    <Button
-                      type='button'
-                      variant='outline-secondary'
-                      onClick={() => {
-                        setEditing(false)
-                        setTitle('')
-                        setComment('')
-                        setRating(5)
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                  )}
-                </div>
-              </Form>
-            </div>
-
             {/* Review List Header */}
             <div className='d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3'>
               <h6 className='fw-bold mb-0' style={{ color: theme.primary }}>
@@ -1371,109 +1160,67 @@ function ReviewSection ({ bookId, onSummaryChange }) {
               </Form.Select>
             </div>
 
-            {/* Reviews */}
+            {/* Customer Reviews */}
             {sortedReviews.length === 0 ? (
               <div className='text-center py-4'>
                 <i className='bi bi-chat-square-text fs-1 text-secondary' />
-                <p className='text-secondary mt-2 mb-0'>
-                  No reviews yet. Be the first to review this book!
-                </p>
+                <p className='text-secondary mt-2 mb-0'>No reviews yet.</p>
               </div>
             ) : (
-              sortedReviews.map(review => {
-                const reviewUserId = review.userId?._id || review.userId
-
-                const isOwnReview =
-                  currentUserId &&
-                  String(reviewUserId) === String(currentUserId)
-
-                const hasVoted = review.helpfulUsers?.some(
-                  user => String(user?._id || user) === String(currentUserId)
-                )
-
-                return (
-                  <div
-                    key={review._id}
-                    className='py-3 border-bottom'
-                    style={{ borderColor: theme.border }}
-                  >
-                    <div className='d-flex justify-content-between flex-wrap gap-2'>
-                      <div>
-                        {/* Actual Customer Name */}
-                        <div
-                          className='fw-semibold'
-                          style={{ color: theme.primary }}
-                        >
-                          {review.userName || 'Customer'}
-                        </div>
-
-                        <StarDisplay value={review.rating} />
-
-                        <div className='fw-semibold mt-2'>{review.title}</div>
-                      </div>
-
-                      <small className='text-secondary'>
-                        {review.createdAt
-                          ? new Date(review.createdAt).toLocaleDateString(
-                              'en-IN'
-                            )
-                          : ''}
-                      </small>
-                    </div>
-
-                    {review.isVerifiedPurchase && (
+              sortedReviews.map(review => (
+                <div
+                  key={review._id}
+                  className='py-3 border-bottom'
+                  style={{ borderColor: theme.border }}
+                >
+                  <div className='d-flex justify-content-between flex-wrap gap-2'>
+                    <div>
                       <div
-                        className='small fw-semibold mt-2'
-                        style={{ color: theme.secondary }}
+                        className='fw-semibold'
+                        style={{ color: theme.primary }}
                       >
-                        <i className='bi bi-patch-check-fill me-1' />
-                        Verified Purchase
+                        {review.userName || 'Customer'}
                       </div>
-                    )}
 
-                    <p
-                      className='mt-2 mb-2'
-                      style={{ color: theme.muted, lineHeight: '1.7' }}
-                    >
-                      {review.comment}
-                    </p>
+                      <StarDisplay value={review.rating} />
 
-                    <div className='d-flex justify-content-between flex-wrap gap-2'>
-                      <Button
-                        size='sm'
-                        variant='outline-secondary'
-                        onClick={() => markHelpful(review._id)}
-                      >
-                        <i className='bi bi-hand-thumbs-up me-1' />
-                        Helpful ({review.helpfulCount || 0})
-                        {hasVoted ? ' ✓' : ''}
-                      </Button>
-
-                      {isOwnReview && (
-                        <div className='d-flex gap-2'>
-                          <Button
-                            size='sm'
-                            variant='outline-primary'
-                            onClick={editReview}
-                          >
-                            <i className='bi bi-pencil me-1' />
-                            Edit
-                          </Button>
-
-                          <Button
-                            size='sm'
-                            variant='outline-danger'
-                            onClick={deleteReview}
-                          >
-                            <i className='bi bi-trash me-1' />
-                            Delete
-                          </Button>
-                        </div>
-                      )}
+                      <div className='fw-semibold mt-2'>{review.title}</div>
                     </div>
+
+                    <small className='text-secondary'>
+                      {review.createdAt
+                        ? new Date(review.createdAt).toLocaleDateString('en-IN')
+                        : ''}
+                    </small>
                   </div>
-                )
-              })
+
+                  {review.isVerifiedPurchase && (
+                    <div
+                      className='small fw-semibold mt-2'
+                      style={{ color: theme.secondary }}
+                    >
+                      <i className='bi bi-patch-check-fill me-1' />
+                      Verified Purchase
+                    </div>
+                  )}
+
+                  <p
+                    className='mt-2 mb-2'
+                    style={{ color: theme.muted, lineHeight: '1.7' }}
+                  >
+                    {review.comment}
+                  </p>
+
+                  <Button
+                    size='sm'
+                    variant='outline-secondary'
+                    onClick={() => markHelpful(review._id)}
+                  >
+                    <i className='bi bi-hand-thumbs-up me-1' />
+                    Helpful ({review.helpfulCount || 0})
+                  </Button>
+                </div>
+              ))
             )}
           </>
         )}

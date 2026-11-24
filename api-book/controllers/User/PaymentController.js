@@ -123,22 +123,18 @@ const verifyPayment = async (req, res) => {
   }
 }
 
-// Fetch logged-in user's orders by email
 const getMyOrders = async (req, res) => {
   try {
-    const email = req.body.email
+    const email = req.user?.email
 
     if (!email) {
-      return res.status(400).json({
-        message: 'Email is required'
+      return res.status(401).json({
+        message: 'User authentication required'
       })
     }
 
     const myOrders = await Transaction.find({
-      email: {
-        $regex: `^${email.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`,
-        $options: 'i'
-      }
+      email: email.trim().toLowerCase()
     }).sort({ createdAt: -1 })
 
     return res.status(200).json({
@@ -146,11 +142,13 @@ const getMyOrders = async (req, res) => {
     })
   } catch (err) {
     console.error('getMyOrders error:', err)
+
     return res.status(500).json({
       message: 'Unable to fetch orders'
     })
   }
 }
+
 
 module.exports = {
   makePayment,

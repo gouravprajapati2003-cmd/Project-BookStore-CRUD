@@ -27,6 +27,10 @@ const userSchema = new Schema(
     profilePhoto: {
       type: String
     },
+    profilePhotoPublicId: {
+      type: String,
+      default: ''
+    },
     lastLogin: {
       type: Date
     },

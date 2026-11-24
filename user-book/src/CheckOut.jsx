@@ -34,21 +34,39 @@ const initialShippingDetails = {
   pincode: ''
 }
 
+function getActiveDiscount (product) {
+  const discounts = Array.isArray(product?.DiscountDetail)
+    ? product.DiscountDetail
+    : product?.DiscountDetail
+    ? [product.DiscountDetail]
+    : []
+
+  const now = new Date()
+
+  return (
+    discounts.find(discount => {
+      const isActive = discount.status?.toLowerCase() === 'active'
+      const validFrom =
+        !discount.validFrom || now >= new Date(discount.validFrom)
+      const validTo = !discount.validTo || now <= new Date(discount.validTo)
+      return isActive && validFrom && validTo
+    }) || null
+  )
+}
+
 function getBookPrice (product) {
   const originalPrice = Number(product.originalPrice ?? product.price ?? 0)
+  const discount = getActiveDiscount(product)
 
-  const discountValue = Number(product.discountValue || 0)
+  if (!discount) return originalPrice
 
-  const hasDiscount =
-    product.status?.toLowerCase() === 'active' && discountValue > 0
+  const discountValue = Number(discount.discountValue || 0)
 
-  if (!hasDiscount) return originalPrice
-
-  if (product.discountType === 'Percentage') {
+  if (discount.discountType === 'Percentage') {
     return Math.max(0, originalPrice - (originalPrice * discountValue) / 100)
   }
 
-  if (product.discountType === 'Fixed') {
+  if (discount.discountType === 'Fixed') {
     return Math.max(0, originalPrice - discountValue)
   }
 
@@ -94,13 +112,14 @@ function CheckOut () {
       : Math.max(1, Number(product.quantity || 1))
 
     const originalPrice = Number(product.originalPrice ?? product.price ?? 0)
-
+    const activeDiscount = getActiveDiscount(product)
     const finalPrice = getBookPrice(product)
 
     return {
       ...product,
       quantity,
       originalPrice,
+      activeDiscount,
       finalPrice,
       subtotal: finalPrice * quantity
     }
@@ -317,9 +336,10 @@ function CheckOut () {
           bookImage: product.bookImage || '',
           quantity: product.quantity,
           originalPrice: product.originalPrice,
-          discountValue: Number(product.discountValue || 0),
-          discountType: product.discountType || '',
-          discountStatus: product.status || '',
+          discountValue: Number(product.activeDiscount?.discountValue || 0),
+          discountType: product.activeDiscount?.discountType || '',
+          discountStatus: product.activeDiscount?.status || '',
+          discountName: product.activeDiscount?.discountName || '',
           finalPrice: product.finalPrice,
           subtotal: product.subtotal
         }))
@@ -690,11 +710,12 @@ function CheckOut () {
                         {product.finalPrice < product.originalPrice && (
                           <div className='mt-1'>
                             <Badge bg='success'>
-                              {product.status?.toLowerCase() === 'active'
-                                ? product.discountType === 'Percentage'
-                                  ? `${product.discountValue}% Off`
-                                  : `₹${product.discountValue} Off`
-                                : 'Discount'}
+                              {product.activeDiscount?.discountType ===
+                              'Percentage'
+                                ? `${product.activeDiscount.discountValue}% Off`
+                                : `₹${
+                                    product.activeDiscount?.discountValue || 0
+                                  } Off`}
                             </Badge>
                           </div>
                         )}

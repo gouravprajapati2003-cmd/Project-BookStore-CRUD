@@ -7,30 +7,86 @@ import { useNavigate, Link, useLocation } from 'react-router-dom'
 import Login from './Login'
 import logo from './assets/logo.png'
 import { useSelector } from 'react-redux'
+import axios from 'axios'
 
 function NavBar () {
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [userName, setUserName] = useState('')
+  const [profilePhoto, setProfilePhoto] = useState('')
   const [searchBook, setSearchBook] = useState('')
 
   const navigate = useNavigate()
   const location = useLocation()
   const { products } = useSelector(state => state.cart)
 
+  const apiUrl = import.meta.env.VITE_API_URL
+
   // User Login Status
   useEffect(() => {
     const token = localStorage.getItem('userToken')
     const flag = localStorage.getItem('isLoggedIn')
 
-    setIsLoggedIn(flag === 'true' && !!token)
+    const loggedIn = flag === 'true' && !!token
+
+    setIsLoggedIn(loggedIn)
     setUserName(localStorage.getItem('userName') || '')
+
+    if (!loggedIn) {
+      setProfilePhoto('')
+    }
 
     if (sessionStorage.getItem('openLoginModal') === 'true') {
       sessionStorage.removeItem('openLoginModal')
       setShowLoginModal(true)
     }
   }, [location.pathname])
+
+  // Fetch User Profile Photo
+  useEffect(() => {
+    const fetchProfilePhoto = async () => {
+      const token = localStorage.getItem('userToken')
+      const flag = localStorage.getItem('isLoggedIn')
+
+      if (!token || flag !== 'true') {
+        setProfilePhoto('')
+        return
+      }
+
+      try {
+        const res = await axios.get(`${apiUrl}/user/profile`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        })
+
+        if (res.data.success) {
+          setProfilePhoto(res.data.data?.profilePhoto || '')
+        }
+      } catch (error) {
+        console.error(
+          'Profile Photo Fetch Error:',
+          error.response?.data || error.message
+        )
+      }
+    }
+
+    fetchProfilePhoto()
+
+    // Listen for Profile Photo Update
+    const handleProfilePhotoUpdate = event => {
+      setProfilePhoto(event.detail || '')
+    }
+
+    window.addEventListener('profilePhotoUpdated', handleProfilePhotoUpdate)
+
+    return () => {
+      window.removeEventListener(
+        'profilePhotoUpdated',
+        handleProfilePhotoUpdate
+      )
+    }
+  }, [location.pathname, apiUrl])
 
   // URL Search Sync
   useEffect(() => {
@@ -53,6 +109,7 @@ function NavBar () {
     }
   }
 
+  // Login Modal
   function goForLogin () {
     setShowLoginModal(true)
   }
@@ -66,9 +123,12 @@ function NavBar () {
 
     setIsLoggedIn(false)
     setUserName('')
+    setProfilePhoto('')
+
     navigate('/')
   }
 
+  // Cart Navigation
   function goToCartPage () {
     navigate('/cart')
   }
@@ -77,6 +137,7 @@ function NavBar () {
   function handleLoginSuccess () {
     setIsLoggedIn(true)
     setUserName(localStorage.getItem('userName') || '')
+    setProfilePhoto('')
     setShowLoginModal(false)
 
     const returnToCheckout =
@@ -92,13 +153,20 @@ function NavBar () {
 
   // Profile Navigation
   function goToProfile () {
+    if (!isLoggedIn) {
+      setShowLoginModal(true)
+      return
+    }
+
     navigate('/profile')
   }
 
+  // Settings Navigation
   function goToSettings () {
     navigate('/settings')
   }
 
+  // Admin Navigation
   const goToAdmin = () => {
     window.location.href = '/admin/'
   }
@@ -138,12 +206,28 @@ function NavBar () {
             border-radius: 8px !important;
             padding: 8px 13px !important;
             font-weight: 600 !important;
+            display: flex !important;
+            align-items: center !important;
           }
 
           .profile-dropdown-toggle:hover,
           .profile-dropdown-toggle:focus {
             background: #e6f4f1 !important;
             color: #0F766E !important;
+          }
+
+          .navbar-profile-photo {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #0F766E;
+            flex-shrink: 0;
+          }
+
+          .navbar-default-profile {
+            font-size: 25px;
+            margin-right: 8px;
           }
 
           .profile-menu {
@@ -305,7 +389,15 @@ function NavBar () {
                   id='profile-dropdown'
                   className='profile-dropdown-toggle'
                 >
-                  <i className='bi bi-person-circle me-2 fs-5'></i>
+                  {isLoggedIn && profilePhoto ? (
+                    <img
+                      src={profilePhoto}
+                      alt='Profile'
+                      className='navbar-profile-photo me-2'
+                    />
+                  ) : (
+                    <i className='bi bi-person-circle navbar-default-profile'></i>
+                  )}
 
                   {isLoggedIn
                     ? userName.split(' ')[0] || 'My Account'

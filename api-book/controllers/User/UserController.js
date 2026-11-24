@@ -1,6 +1,7 @@
 const User = require('../../models/User')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const cloudinary = require('../../config/cloudinary')
 
 const addUser = async (req, res) => {
   try {
@@ -149,6 +150,174 @@ const doUserLogin = async (req, res) => {
   }
 }
 
+// Get logged-in user's profile
+const getUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('-password')
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      })
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: user
+    })
+  } catch (error) {
+    console.error('Get Profile Error:', error)
+
+    return res.status(500).json({
+      success: false,
+      message: 'Unable to fetch profile'
+    })
+  }
+}
+
+// Update profile details
+const updateUserProfile = async (req, res) => {
+  try {
+    const { firstName, lastName, mobileNo } = req.body
+
+    if (!firstName || !firstName.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'First name is required'
+      })
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        firstName: firstName.trim(),
+        lastName: lastName?.trim() || '',
+        mobileNo: mobileNo?.trim() || ''
+      },
+      {
+        new: true,
+        runValidators: true
+      }
+    ).select('-password')
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      })
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      data: user
+    })
+  } catch (error) {
+    console.error('Update Profile Error:', error)
+
+    return res.status(500).json({
+      success: false,
+      message: 'Unable to update profile'
+    })
+  }
+}
+
+// Upload or change profile photo
+const uploadUserProfilePhoto = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please select a profile photo'
+      })
+    }
+
+    const user = await User.findById(req.user._id)
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      })
+    }
+
+    const uploadResult = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: 'gkp-bookstore/profile-photos',
+          public_id: `user_${user._id}`,
+          overwrite: true,
+          resource_type: 'image'
+        },
+        (error, result) => {
+          if (error) return reject(error)
+          resolve(result)
+        }
+      )
+
+      stream.end(req.file.buffer)
+    })
+
+    user.profilePhoto = uploadResult.secure_url
+    user.profilePhotoPublicId = uploadResult.public_id
+
+    await user.save()
+
+    return res.status(200).json({
+      success: true,
+      message: 'Profile photo updated successfully',
+      data: {
+        profilePhoto: user.profilePhoto
+      }
+    })
+  } catch (error) {
+    console.error('Profile Photo Upload Error:', error)
+
+    return res.status(500).json({
+      success: false,
+      message: 'Unable to upload profile photo'
+    })
+  }
+}
+
+// Remove profile photo
+const removeUserProfilePhoto = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id)
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      })
+    }
+
+    if (user.profilePhotoPublicId) {
+      await cloudinary.uploader.destroy(user.profilePhotoPublicId)
+    }
+
+    user.profilePhoto = ''
+    user.profilePhotoPublicId = ''
+
+    await user.save()
+
+    return res.status(200).json({
+      success: true,
+      message: 'Profile photo removed successfully',
+      data: {
+        profilePhoto: ''
+      }
+    })
+  } catch (error) {
+    console.error('Remove Profile Photo Error:', error)
+
+    return res.status(500).json({
+      success: false,
+      message: 'Unable to remove profile photo'
+    })
+  }
+}
 
 const updateUserStatus = async (req, res) => {
   try {
@@ -194,5 +363,9 @@ const updateUserStatus = async (req, res) => {
 module.exports = {
   addUser,
   doUserLogin,
-  updateUserStatus
+  updateUserStatus,
+  getUserProfile,
+  updateUserProfile,
+  uploadUserProfilePhoto,
+  removeUserProfilePhoto
 }

@@ -11,15 +11,16 @@ import CheckOut from './CheckOut.jsx'
 import MyOrder from './MyOrder.jsx'
 import PaymentSuccess from './PaymentSuccess.jsx'
 import PaymentFailure from './PaymentFailure.jsx'
+import Profile from './Profile.jsx'
 import ScrollToTop from './ScrollToTop.jsx'
-
 
 function App () {
   return (
     <Provider store={store}>
       <BrowserRouter>
-      <ScrollToTop></ScrollToTop>
+        <ScrollToTop />
         <NavBar />
+
         <main
           style={{
             backgroundColor: '#F5F7FA',
@@ -38,6 +39,8 @@ function App () {
             <Route path='/checkout' element={<CheckOut />} />
 
             <Route path='/myorders' element={<MyOrder />} />
+
+            <Route path='/profile' element={<Profile />} />
 
             <Route path='/payment/success' element={<PaymentSuccess />} />
 
