@@ -165,6 +165,7 @@ function Login ({ show, onHide, onLoginSuccess }) {
       localStorage.setItem('userName', user.name || '')
       localStorage.setItem('userEmail', user.email || normalizedEmail)
       localStorage.setItem('isLoggedIn', 'true')
+      window.dispatchEvent(new Event('userSessionUpdated'))
 
       const shouldReturnToCheckout =
         sessionStorage.getItem('openCheckoutAfterLogin') === 'true' ||

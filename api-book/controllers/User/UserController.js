@@ -125,7 +125,7 @@ const doUserLogin = async (req, res) => {
         userType: user.userType
       },
       process.env.JWT_SECRET,
-      { expiresIn: '3h' }
+      { expiresIn: '7d' }
     )
 
     user.lastLogin = new Date()

@@ -8,6 +8,7 @@ import Login from './Login'
 import logo from './assets/logo.png'
 import { useSelector } from 'react-redux'
 import axios from 'axios'
+import { clearUserSession, checkUserSession } from './utils/userSession.js'
 
 function NavBar () {
   const [showLoginModal, setShowLoginModal] = useState(false)
@@ -24,17 +25,20 @@ function NavBar () {
 
   // User Login Status
   useEffect(() => {
-    const token = localStorage.getItem('userToken')
-    const flag = localStorage.getItem('isLoggedIn')
+    const checkLoginStatus = () => {
+      const validSession = checkUserSession()
 
-    const loggedIn = flag === 'true' && !!token
-
-    setIsLoggedIn(loggedIn)
-    setUserName(localStorage.getItem('userName') || '')
-
-    if (!loggedIn) {
-      setProfilePhoto('')
+      if (validSession) {
+        setIsLoggedIn(true)
+        setUserName(localStorage.getItem('userName') || '')
+      } else {
+        setIsLoggedIn(false)
+        setUserName('')
+        setProfilePhoto('')
+      }
     }
+
+    checkLoginStatus()
 
     if (sessionStorage.getItem('openLoginModal') === 'true') {
       sessionStorage.removeItem('openLoginModal')
@@ -42,13 +46,33 @@ function NavBar () {
     }
   }, [location.pathname])
 
+  // Automatic Session Expiry Listener
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      setIsLoggedIn(false)
+      setUserName('')
+      setProfilePhoto('')
+      setShowLoginModal(false)
+
+      if (['/profile', '/myorders', '/checkout'].includes(location.pathname)) {
+        navigate('/', { replace: true })
+      }
+    }
+
+    window.addEventListener('userSessionExpired', handleSessionExpired)
+
+    return () => {
+      window.removeEventListener('userSessionExpired', handleSessionExpired)
+    }
+  }, [location.pathname, navigate])
+
   // Fetch User Profile Photo
   useEffect(() => {
     const fetchProfilePhoto = async () => {
+      const validSession = checkUserSession()
       const token = localStorage.getItem('userToken')
-      const flag = localStorage.getItem('isLoggedIn')
 
-      if (!token || flag !== 'true') {
+      if (!validSession || !token) {
         setProfilePhoto('')
         return
       }
@@ -64,6 +88,11 @@ function NavBar () {
           setProfilePhoto(res.data.data?.profilePhoto || '')
         }
       } catch (error) {
+        if (error.response?.status === 401) {
+          clearUserSession()
+          return
+        }
+
         console.error(
           'Profile Photo Fetch Error:',
           error.response?.data || error.message
@@ -116,10 +145,7 @@ function NavBar () {
 
   // User Logout
   function handleLogout () {
-    localStorage.removeItem('isLoggedIn')
-    localStorage.removeItem('userName')
-    localStorage.removeItem('userEmail')
-    localStorage.removeItem('userToken')
+    clearUserSession()
 
     setIsLoggedIn(false)
     setUserName('')
@@ -153,7 +179,10 @@ function NavBar () {
 
   // Profile Navigation
   function goToProfile () {
-    if (!isLoggedIn) {
+    if (!checkUserSession()) {
+      setIsLoggedIn(false)
+      setUserName('')
+      setProfilePhoto('')
       setShowLoginModal(true)
       return
     }
@@ -283,7 +312,7 @@ function NavBar () {
             />
 
             <span style={{ fontSize: '1.3rem', whiteSpace: 'nowrap' }}>
-              G.K.P. BookStore
+              G.K.P BookStore
             </span>
           </Navbar.Brand>
 
@@ -344,7 +373,7 @@ function NavBar () {
                 Home
               </Nav.Link>
 
-              <Nav.Link href='#contact' className='text-white fw-semibold px-2'>
+              <Nav.Link href='/contact' className='text-white fw-semibold px-2'>
                 <i className='bi bi-telephone me-1'></i>
                 Contact
               </Nav.Link>
